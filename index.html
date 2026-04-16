@@ -226,7 +226,7 @@
     <button class="tab" onclick="showTab('sunday')">주일출석</button>
     <button class="tab" onclick="showTab('cell')">셀출석</button>
     <button class="tab" onclick="showTab('manage')">셀 · 구성원 관리</button>
-    <button class="tab" onclick="showTab('history')">출석 이력</button>
+    
   </div>
 
   <!-- 주일출석 -->
@@ -375,42 +375,7 @@
   </div>
 
   <!-- 이력 -->
-  <div class="section" id="sec-history">
-    <div class="card">
-      <div style="font-size:15px;font-weight:600;margin-bottom:1rem;">출석 이력 (최근 10주)</div>
-      <div class="row" style="margin-bottom:1rem;">
-        <select id="histNet" onchange="updateHistCell()" style="width:180px;">
-          <option value="">전체 네트</option>
-          <option value="강민호">강민호네트</option>
-<option value="고정희">고정희네트</option>
-<option value="김영철">김영철네트</option>
-<option value="김정여">김정여네트</option>
-<option value="김태영">김태영네트</option>
-<option value="김한수">김한수네트</option>
-<option value="김현숙">김현숙네트</option>
-<option value="김혜경">김혜경네트</option>
-<option value="박성원">박성원네트</option>
-<option value="박혜경">박혜경네트</option>
-<option value="백기철">백기철네트</option>
-<option value="오상용">오상용네트</option>
-<option value="안주영">안주영네트</option>
-<option value="양규식">양규식네트</option>
-<option value="양선아">양선아네트</option>
-<option value="유재원">유재원네트</option>
-<option value="이맑음">이맑음네트</option>
-<option value="이성탄">이성탄네트</option>
-<option value="이수진">이수진네트</option>
-<option value="이영근">이영근네트</option>
-<option value="이정화">이정화네트</option>
-<option value="장성수">장성수네트</option>
-<option value="현소라">현소라네트</option>
-<option value="현희순">현희순네트</option>
-        </select>
-        <select id="histCell" onchange="renderHistory()" style="width:180px;"><option value="">전체 셀</option></select>
-      </div>
-      <div id="historyTable"></div>
-    </div>
-  </div>
+  
 </div>
 
 </div><!-- appContent -->
@@ -582,7 +547,7 @@ function startRealtime() {
           else if (t === 'sunday') { populateSundayFilters(); renderSunday(); }
           else if (t === 'cell') { populateCellFilters(); renderCellAtt(); }
           else if (t === 'manage') renderManage();
-          else if (t === 'history') { updateHistCell(); renderHistory(); }
+          
         }
       }
     }
@@ -640,7 +605,7 @@ window.loadFromCloud = async function(showMsg) {
       if (showMsg) showToast('☁️ 저장된 데이터가 없습니다');
     }
     setConnStatus('online', '실시간 연결됨');
-    populateFilters(); setDate(true); renderHistory();
+    populateFilters(); setDate(true);
     initDashControls();
     startRealtime();
   } catch(e) {
@@ -703,7 +668,7 @@ window.importJSON = function(e) {
         document.getElementById('mo').value = currentDate.m;
         document.getElementById('dy').value = currentDate.d;
       }
-      populateFilters(); setDate(true); renderHistory();
+      populateFilters(); setDate(true);
       markDirty();
       showToast('📥 불러왔습니다 — 클라우드 저장을 눌러 반영하세요');
     } catch { showToast('❌ 파일 형식 오류'); }
@@ -782,7 +747,7 @@ window.setDate = function(silent) {
   if(_t === 'dash') { initDashControls(); renderDash(); }
   else if(_t === 'sunday') renderSunday();
   else if(_t === 'cell') renderCellAtt();
-  else if(_t === 'history') renderHistory();
+  
   else renderDash();
   if(!silent) markDirty();
 };
@@ -793,7 +758,7 @@ function renderAtt() {
   const _t = _at?.getAttribute('onclick')?.match(/showTab\('(\w+)'\)/)?.[1] || 'dash';
   if(_t === 'sunday') renderSunday();
   else if(_t === 'cell') renderCellAtt();
-  else if(_t === 'history') renderHistory();
+  
   else if(_t === 'dash') { renderDash(); renderDashMembers(); }
   renderDash(); // 대시보드 항상 최신 유지
 }
@@ -807,7 +772,7 @@ window.showTab = function(t) {
   if(t==='sunday') { populateSundayFilters(); renderSunday(); }
   if(t==='cell') { populateCellFilters(); renderCellAtt(); }
   if(t==='manage') renderManage();
-  if(t==='history') { initHistFilters(); renderHistory(); }
+  
 };
 
 // ── 필터 ─────────────────────────────────────────────
@@ -824,8 +789,7 @@ function populateFilters() {
   });
   updateCellSelect();
   // 출석이력 탭이 열려있으면 셀 목록도 갱신
-  const histTab = document.querySelector('.tab-content#history');
-  if(histTab && histTab.style.display !== 'none') updateHistCell();
+  
 }
 
 function populateSundayFilters() {
@@ -1435,121 +1399,6 @@ window.addMember = function() {
   markDirty(); renderManage(); renderAtt();
 };
 
-// ── 이력 ─────────────────────────────────────────────
-// 출석 이력 필터 초기화 (탭 진입시 1회)
-function initHistFilters() {
-  // 네트 목록은 HTML에 미리 있음, 셀 목록만 갱신
-  updateHistCell();
-}
-
-// 네트 변경 시 셀 목록 갱신 + 이력 즉시 렌더
-function updateHistCell() {
-  const hnEl = document.getElementById('histNet');
-  const hc = document.getElementById('histCell');
-  if(!hnEl || !hc) return;
-
-  // option의 value를 직접 읽어서 정확한 네트명 사용
-  const hn = hnEl.options[hnEl.selectedIndex]?.value || '';
-
-  // 셀 목록 완전 초기화
-  while(hc.options.length > 0) hc.remove(0);
-  const allOpt = document.createElement('option');
-  allOpt.value = ''; allOpt.textContent = '전체 셀';
-  hc.appendChild(allOpt);
-
-  if(hn && state.nets[hn]) {
-    const cells = Object.keys(state.nets[hn].cells || {});
-    if(cells.length === 0) {
-      const noOpt = document.createElement('option');
-      noOpt.value = ''; noOpt.textContent = '(셀 없음)';
-      noOpt.disabled = true;
-      hc.appendChild(noOpt);
-    } else {
-      cells.forEach(c => {
-        const opt = document.createElement('option');
-        opt.value = c; opt.textContent = c;
-        hc.appendChild(opt);
-      });
-    }
-  }
-  renderHistory();
-}
-
-function renderHistory() {
-  const hn = document.getElementById('histNet')?.value || '';
-  const hc = document.getElementById('histCell')?.value || '';
-  const nets = hn ? [hn] : NETS;
-
-  // 모든 날짜 키 수집 (데이터 유무 상관없이)
-  const allDates = new Set();
-  getAllMembers().forEach(({m}) => {
-    Object.keys(m.att).forEach(k => {
-      if(k && !k.startsWith('cell-') && m.att[k]) allDates.add(k);
-    });
-  });
-  const dates = [...allDates].sort().reverse().slice(0,10);
-
-  // 표시할 구성원 수집
-  const members = [];
-  nets.forEach(net => {
-    Object.entries(state.nets[net]?.cells||{}).forEach(([cell, cd]) => {
-      if(hc && cell !== hc) return;
-      cd.members.forEach(m => members.push({net, cell, m}));
-    });
-  });
-
-  if(!members.length) {
-    document.getElementById('historyTable').innerHTML =
-      '<div style="color:var(--text2);padding:1rem;">해당 네트/셀의 구성원이 없습니다.</div>';
-    return;
-  }
-  if(!dates.length) {
-    document.getElementById('historyTable').innerHTML =
-      '<div style="color:var(--text2);padding:1rem;">출석 이력이 없습니다. 출석을 입력하고 저장해주세요.</div>';
-    return;
-  }
-
-  const ATT_BG2  = {att:'#EAF3DE', abs:'#FCEBEB', late:'#FAEEDA'};
-  const ATT_COL2 = {att:'#3B6D11', abs:'#A32D2D', late:'#854F0B'};
-  const ATT_SYM2 = {att:'출', abs:'결', late:'지'};
-
-  const th = `<th style="text-align:left;padding:6px 10px;font-size:12px;">이름</th>` +
-    `<th style="text-align:left;padding:6px 10px;font-size:12px;">네트/셀</th>` +
-    dates.map(d => {
-      const parts = d.split('-');
-      return `<th style="text-align:center;padding:6px 8px;font-size:11px;white-space:nowrap;">${parts[1]}/${parts[2]}</th>`;
-    }).join('');
-
-  const rows = members.map(({net, cell, m}) => {
-    const tds = dates.map(d => {
-      const s = m.att[d];
-      return s
-        ? `<td style="text-align:center;padding:4px;">
-            <span style="font-size:11px;padding:2px 6px;border-radius:6px;
-              background:${ATT_BG2[s]||'#f0f0f0'};
-              color:${ATT_COL2[s]||'#333'};">
-              ${ATT_SYM2[s]||s}
-            </span>
-          </td>`
-        : `<td style="text-align:center;padding:4px;color:var(--text3);font-size:11px;">-</td>`;
-    }).join('');
-    return `<tr>
-      <td style="padding:6px 10px;font-size:13px;border-bottom:1px solid var(--border);">${m.name}</td>
-      <td style="padding:6px 10px;font-size:11px;color:var(--text2);border-bottom:1px solid var(--border);">${net}<br>${cell}</td>
-      ${tds}
-    </tr>`;
-  }).join('');
-
-  document.getElementById('historyTable').innerHTML =
-    `<div class="hist-table-wrap">
-      <table class="hist-table" style="width:100%;border-collapse:collapse;">
-        <thead style="background:var(--bg2);">
-          <tr>${th}</tr>
-        </thead>
-        <tbody>${rows}</tbody>
-      </table>
-    </div>`;
-}
 
 // ── 토스트 ────────────────────────────────────────────
 window.showToast = function(msg) {
