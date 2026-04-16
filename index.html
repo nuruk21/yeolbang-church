@@ -776,9 +776,27 @@ window.setDate = function(silent) {
   const dowColor=dowIdx===0?'#A32D2D':dowIdx===6?'#185FA5':'var(--text)';
   document.getElementById('curDate').innerHTML=
     `${y}년 ${m}월 ${d}일 <span style="color:${dowColor};">(${dow}요일)</span>`;
-  renderDash();
+  // 날짜 변경 시 현재 활성 탭 즉시 반영
+  const _at = document.querySelector('.tab.active');
+  const _t = _at?.getAttribute('onclick')?.match(/showTab\('(\w+)'\)/)?.[1] || 'dash';
+  if(_t === 'dash') { initDashControls(); renderDash(); }
+  else if(_t === 'sunday') renderSunday();
+  else if(_t === 'cell') renderCellAtt();
+  else if(_t === 'history') renderHistory();
+  else renderDash();
   if(!silent) markDirty();
 };
+
+// 현재 활성 탭 즉시 렌더링
+function renderAtt() {
+  const _at = document.querySelector('.tab.active');
+  const _t = _at?.getAttribute('onclick')?.match(/showTab\('(\w+)'\)/)?.[1] || 'dash';
+  if(_t === 'sunday') renderSunday();
+  else if(_t === 'cell') renderCellAtt();
+  else if(_t === 'history') renderHistory();
+  else if(_t === 'dash') { renderDash(); renderDashMembers(); }
+  renderDash(); // 대시보드 항상 최신 유지
+}
 
 window.showTab = function(t) {
   document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
@@ -865,7 +883,7 @@ function renderSunday() {
     const mHtml=isOpen?allMembers.map(({cell,m})=>`
       <div class="member-card">
         <div class="member-name">${m.name}</div>
-        <div style="font-size:10px;color:var(--text2);margin-bottom:5px;">${cell}</div>
+        <div style="font-size:10px;color:var(--text2);margin-bottom:5px;">${search ? net+'네트 · ' : ''}${cell}</div>
         <div class="att-btns">${ATT.map(s=>`<button class="att-btn ${getAtt(m,dk)===s?s:''}" onclick="setSundayAtt('${net}','${cell}','${m.id}','${s}')">${ATT_LBL[s]}</button>`).join('')}</div>
         <div style="font-size:11px;color:var(--text2);margin-bottom:3px;">교육과정 이수:</div>
         <div class="course-chips">${COURSES.map((c,i)=>`<span class="course-chip ${m.courses[c]?'done':''}" onclick="toggleCourse('${net}','${cell}','${m.id}','${c}')">${COURSE_SHORT[i]}</span>`).join('')}</div>
@@ -904,6 +922,20 @@ window.markAllSunday = function(status) {
 function renderCellAtt() {
   const search=document.getElementById('cellSearch')?.value.toLowerCase()||'';
   const filterNet=document.getElementById('cellFilterNet')?.value||'';
+  // 이름 검색 시 자동으로 해당 네트 필터 적용
+  if(search && !filterNet) {
+    let foundNet = '';
+    NETS.forEach(net => {
+      Object.values(state.nets[net]?.cells||{}).forEach(cd => {
+        cd.members.forEach(m => { if(m.name.includes(search)) foundNet = net; });
+      });
+    });
+    // 검색어에 해당하는 네트가 있으면 해당 네트만 표시
+    const el = document.getElementById('cellFilterNet');
+    if(foundNet && el && el.value !== foundNet) {
+      // 자동 필터는 적용하지 않고 검색 결과만 보여줌 (사용자가 명시적으로 선택하지 않은 경우)
+    }
+  }
   const dk='cell-'+getDateKey();
   let html='';
   (filterNet?[filterNet]:NETS).forEach(net=>{
@@ -926,6 +958,7 @@ function renderCellAtt() {
         const mHtml=members.map(m=>`
           <div class="member-card">
             <div class="member-name">${m.name}</div>
+            ${search ? `<div style="font-size:10px;color:var(--text2);margin-bottom:4px;">${net}네트 · ${cell}</div>` : ''}
             <div class="att-btns">${ATT.map(s=>`<button class="att-btn ${getAtt(m,'cell-'+getDateKey())===s?s:''}" onclick="setCellAtt('${net}','${cell}','${m.id}','${s}')">${ATT_LBL[s]}</button>`).join('')}</div>
           </div>`).join('');
         innerHtml+=`<div style="margin-bottom:10px;">
@@ -1414,23 +1447,29 @@ function updateHistCell() {
   const hnEl = document.getElementById('histNet');
   const hc = document.getElementById('histCell');
   if(!hnEl || !hc) return;
-  const hn = hnEl.value || '';
-  const prevCell = hc.value;
 
-  // 셀 목록 초기화
-  hc.innerHTML = '<option value="">전체 셀</option>';
+  // option의 value를 직접 읽어서 정확한 네트명 사용
+  const hn = hnEl.options[hnEl.selectedIndex]?.value || '';
+
+  // 셀 목록 완전 초기화
+  while(hc.options.length > 0) hc.remove(0);
+  const allOpt = document.createElement('option');
+  allOpt.value = ''; allOpt.textContent = '전체 셀';
+  hc.appendChild(allOpt);
 
   if(hn && state.nets[hn]) {
     const cells = Object.keys(state.nets[hn].cells || {});
-    cells.forEach(c => {
-      const opt = document.createElement('option');
-      opt.value = c;
-      opt.textContent = c;
-      hc.appendChild(opt);
-    });
-    // 이전 선택 셀이 현재 네트에 있으면 유지
-    if(prevCell && cells.includes(prevCell)) {
-      hc.value = prevCell;
+    if(cells.length === 0) {
+      const noOpt = document.createElement('option');
+      noOpt.value = ''; noOpt.textContent = '(셀 없음)';
+      noOpt.disabled = true;
+      hc.appendChild(noOpt);
+    } else {
+      cells.forEach(c => {
+        const opt = document.createElement('option');
+        opt.value = c; opt.textContent = c;
+        hc.appendChild(opt);
+      });
     }
   }
   renderHistory();
