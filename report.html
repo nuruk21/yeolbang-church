@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>열방교회 셀보고서</title>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{--primary:#1a3a5c;--accent:#c8973a;--bg:#f8f6f1;--card:#fff;--text:#1a1a1a;--text2:#555;--border:#e2ddd4;--radius:10px;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Malgun Gothic','맑은 고딕',sans-serif;background:var(--bg);color:var(--text);font-size:15px;}
+.header{background:var(--primary);padding:1.5rem;text-align:center;position:relative;}
+.back-link{position:absolute;top:14px;left:16px;color:rgba(255,255,255,.7);font-size:13px;text-decoration:none;}
+.h-icon{font-size:30px;margin-bottom:6px;}
+.h-title{font-size:20px;font-weight:700;color:#fff;}
+.h-line{display:inline-block;width:36px;height:3px;background:var(--accent);border-radius:2px;margin:8px 0;}
+.h-sub{font-size:12px;color:rgba(255,255,255,.6);}
+.wrap{max-width:660px;margin:0 auto;padding:1.2rem 1rem 4rem;}
+.ebox{background:#fffbf0;border:1.5px solid #f0d87a;border-radius:var(--radius);padding:13px;margin-bottom:1rem;}
+.ebox-t{font-size:13px;font-weight:600;color:#7a5c00;margin-bottom:8px;}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:1rem;overflow:hidden;}
+.ch{background:var(--primary);padding:9px 14px;}
+.ch.gold{background:var(--accent);}
+.ch span{font-size:13px;font-weight:600;color:#fff;}
+.cb{padding:14px;}
+.f{margin-bottom:12px;}
+.f:last-child{margin-bottom:0;}
+.lbl{font-size:12px;font-weight:600;color:var(--text2);margin-bottom:4px;display:block;}
+.req{color:#c0392b;}
+.r2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+@media(max-width:480px){.r2{grid-template-columns:1fr;}}
+input,select,textarea{width:100%;padding:9px 11px;font-size:14px;border:1.5px solid var(--border);border-radius:8px;background:#fff;color:var(--text);outline:none;font-family:inherit;}
+input:focus,select:focus,textarea:focus{border-color:var(--primary);}
+textarea{resize:vertical;min-height:72px;line-height:1.6;}
+.nc-item{background:#f9f7f3;border:1.5px solid var(--border);border-radius:8px;padding:12px;margin-bottom:8px;position:relative;}
+.nc-t{font-size:12px;font-weight:700;color:var(--primary);margin-bottom:8px;}
+.nc-rm{position:absolute;top:8px;right:8px;width:22px;height:22px;border-radius:50%;border:none;background:#fee2e2;color:#c0392b;font-size:13px;cursor:pointer;font-weight:700;}
+.add-btn{width:100%;padding:10px;background:#eef4fb;color:var(--primary);border:1.5px dashed #b0c8e8;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;}
+.add-btn:hover{background:#ddeaf8;}
+.sub-btn{width:100%;max-width:420px;display:flex;align-items:center;justify-content:center;gap:8px;margin:1rem auto 0;background:var(--primary);color:#fff;border:none;padding:14px;border-radius:30px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 4px 16px rgba(26,58,92,.25);}
+.sub-btn:hover{background:#0f2a45;}
+#ov{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.55);z-index:9999;overflow-y:auto;padding:1rem;}
+.modal{background:#fff;border-radius:var(--radius);max-width:600px;margin:0 auto;overflow:hidden;}
+.mh{background:var(--primary);padding:13px 16px;display:flex;align-items:center;justify-content:space-between;}
+.mh-t{font-size:15px;font-weight:700;color:#fff;}
+.mc{background:rgba(255,255,255,.2);border:none;color:#fff;width:28px;height:28px;border-radius:50%;font-size:16px;cursor:pointer;}
+.mb{padding:16px;}
+.pr{display:flex;gap:10px;padding:7px 0;border-bottom:1px solid #f0ece4;font-size:13px;}
+.pr:last-child{border-bottom:none;}
+.pl{font-weight:600;color:var(--text2);min-width:80px;flex-shrink:0;}
+.pv{color:var(--text);line-height:1.6;white-space:pre-line;flex:1;}
+.mf{padding:13px 16px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;}
+.b-back{padding:9px 18px;border-radius:8px;border:1.5px solid var(--border);background:#fff;color:var(--text2);font-size:14px;font-weight:500;cursor:pointer;font-family:inherit;}
+.b-send{padding:9px 20px;border-radius:8px;border:none;background:var(--primary);color:#fff;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;}
+.b-send:hover{background:#0f2a45;}
+.b-send:disabled{background:#aaa;cursor:not-allowed;}
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1a3a5c;color:#fff;padding:11px 22px;border-radius:20px;font-size:14px;font-weight:500;z-index:99999;display:none;white-space:nowrap;}
+</style>
+</head>
+<body>
+<div class="header">
+  <a class="back-link" href="./index.html">← 출석부</a>
+  <div class="h-icon">⛪</div>
+  <div class="h-title">열방교회 셀보고서</div>
+  <div class="h-line"></div>
+  <div class="h-sub">셀모임 후 리더가 작성하여 제출하는 보고서입니다</div>
+</div>
+
+<div class="wrap">
+  <div class="ebox">
+    <div class="ebox-t">📧 보고서 수신 이메일</div>
+    <div class="f">
+      <label class="lbl">상위 리더 / 담당자 이메일 <span class="req">*</span></label>
+      <input type="email" id="toEmail" placeholder="보고서를 받을 이메일 주소">
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="ch"><span>📋 기본 정보</span></div>
+    <div class="cb">
+      <div class="r2">
+        <div class="f"><label class="lbl">모임 날짜 <span class="req">*</span></label><input type="date" id="meetingDate"></div>
+        <div class="f"><label class="lbl">모임 시간</label><input type="text" id="meetingTime" placeholder="예) 오후 7:30"></div>
+      </div>
+      <div class="r2">
+        <div class="f"><label class="lbl">네트명 <span class="req">*</span></label>
+          <select id="netName"><option value="">네트 선택</option>
+            <option>강민호네트</option><option>고정희네트</option><option>김영철네트</option><option>김정여네트</option><option>김태영네트</option><option>김한수네트</option><option>김현숙네트</option><option>김혜경네트</option><option>박성원네트</option><option>박혜경네트</option><option>백기철네트</option><option>오상용네트</option><option>안주영네트</option><option>양규식네트</option><option>양선아네트</option><option>유재원네트</option><option>이맑음네트</option><option>이성탄네트</option><option>이수진네트</option><option>이영근네트</option><option>이정화네트</option><option>장성수네트</option><option>현소라네트</option><option>현희순네트</option>
+          </select>
+        </div>
+        <div class="f"><label class="lbl">셀명 <span class="req">*</span></label><input type="text" id="cellName" placeholder="예) 믿음셀"></div>
+      </div>
+      <div class="r2">
+        <div class="f"><label class="lbl">셀리더 이름 <span class="req">*</span></label><input type="text" id="leaderName" placeholder="셀리더 이름"></div>
+        <div class="f"><label class="lbl">모임 장소 <span class="req">*</span></label><input type="text" id="meetingPlace" placeholder="예) ○○○ 자택"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="ch"><span>👥 출석 현황</span></div>
+    <div class="cb">
+      <div class="r2">
+        <div class="f"><label class="lbl">전체 셀원 수</label><input type="number" id="totalMembers" placeholder="명" min="0"></div>
+        <div class="f"><label class="lbl">참석 인원 <span class="req">*</span></label><input type="number" id="attendCount" placeholder="명" min="0"></div>
+      </div>
+      <div class="f"><label class="lbl">결석자 및 사유</label><textarea id="absentMembers" placeholder="예) 홍길동 - 출장, 김영희 - 건강 이상"></textarea></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="ch"><span>📖 말씀 및 나눔</span></div>
+    <div class="cb">
+      <div class="f"><label class="lbl">성경 본문 <span class="req">*</span></label><input type="text" id="bibleRef" placeholder="예) 요한복음 3:16"></div>
+      <div class="f"><label class="lbl">설교 / 나눔 내용 요약 <span class="req">*</span></label><textarea id="sermonSummary" placeholder="말씀의 핵심 내용을 작성해주세요." style="min-height:100px;"></textarea></div>
+      <div class="f"><label class="lbl">주요 나눔 / 은혜 내용</label><textarea id="sharingContent" placeholder="셀원들이 나눈 은혜, 결단, 기도제목 등을 기록해주세요."></textarea></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="ch gold"><span>🌱 새신자 참석 현황</span></div>
+    <div class="cb">
+      <div id="ncList"></div>
+      <button class="add-btn" id="addNcBtn">+ 새신자 추가</button>
+      <div style="margin-top:10px;"><label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text2);cursor:pointer;"><input type="checkbox" id="noNc" style="width:auto;"> 이번 모임에 새신자 없음</label></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="ch"><span>🙏 셀 기도 제목</span></div>
+    <div class="cb"><div class="f"><label class="lbl">이번 주 셀 기도 제목</label><textarea id="prayerReq" placeholder="셀 전체 기도제목을 작성해주세요."></textarea></div></div>
+  </div>
+
+  <div class="card">
+    <div class="ch"><span>📝 특이사항 및 건의사항</span></div>
+    <div class="cb">
+      <div class="f"><label class="lbl">상위 리더에게 보고할 내용</label><textarea id="specialNote" placeholder="셀원의 특별한 상황, 돌봄 필요, 건의사항 등을 작성해주세요."></textarea></div>
+      <div class="f"><label class="lbl">다음 모임 계획</label><input type="text" id="nextPlan" placeholder="예) 다음 주 화요일 오후 7시, ○○○ 자택"></div>
+    </div>
+  </div>
+
+  <button class="sub-btn" id="subBtn">📧 보고서 미리보기 및 전송</button>
+</div>
+
+<div id="ov">
+  <div class="modal">
+    <div class="mh"><span class="mh-t">📋 셀보고서 미리보기</span><button class="mc" id="mcBtn">✕</button></div>
+    <div class="mb" id="pvContent"></div>
+    <div class="mf"><button class="b-back" id="backBtn">수정하기</button><button class="b-print" id="printBtn" onclick="printReport()" style="height:40px;padding:0 18px;font-size:14px;font-weight:600;border:1px solid #1a3a5c;border-radius:8px;background:#fff;color:#1a3a5c;cursor:pointer;">🖨️ 인쇄</button><button class="b-send" id="sendBtn">📧 이메일로 전송</button></div>
+  </div>
+</div>
+<div id="toast"></div>
+
+<script>
+emailjs.init('5rrtYoZRyhhUgy7ef');
+document.getElementById('meetingDate').value = new Date().toISOString().split('T')[0];
+
+var ncCount = 0;
+
+document.getElementById('addNcBtn').addEventListener('click', function() {
+  document.getElementById('noNc').checked = false;
+  ncCount++;
+  var n = ncCount;
+  var d = document.createElement('div');
+  d.className = 'nc-item';
+  d.id = 'nci_' + n;
+  d.innerHTML =
+    '<div class="nc-t">새신자 #' + n + '</div>' +
+    '<button class="nc-rm" onclick="document.getElementById(\'nci_' + n + '\').remove()">✕</button>' +
+    '<div class="r2">' +
+      '<div class="f"><label class="lbl">이름</label><input type="text" id="nc_name_' + n + '" placeholder="이름"></div>' +
+      '<div class="f"><label class="lbl">연락처</label><input type="text" id="nc_phone_' + n + '" placeholder="010-0000-0000"></div>' +
+    '</div>' +
+    '<div class="r2">' +
+      '<div class="f"><label class="lbl">나이/성별</label><input type="text" id="nc_age_' + n + '" placeholder="예) 30대/여"></div>' +
+      '<div class="f"><label class="lbl">방문 경로</label><input type="text" id="nc_route_' + n + '" placeholder="예) ○○님 전도"></div>' +
+    '</div>' +
+    '<div class="f"><label class="lbl">특이사항</label><input type="text" id="nc_note_' + n + '" placeholder="신앙배경 등"></div>';
+  document.getElementById('ncList').appendChild(d);
+});
+
+document.getElementById('noNc').addEventListener('change', function() {
+  if (this.checked) { document.getElementById('ncList').innerHTML = ''; ncCount = 0; }
+});
+
+function gv(id) { var el = document.getElementById(id); return el ? el.value.trim() : ''; }
+
+function getNc() {
+  if (document.getElementById('noNc').checked) return '새신자 없음';
+  var list = [];
+  document.querySelectorAll('[id^="nc_name_"]').forEach(function(el) {
+    var n = el.id.replace('nc_name_','');
+    var name = el.value.trim();
+    if (name) list.push((list.length+1)+'. '+name+' / '+(gv('nc_phone_'+n)||'-')+' / '+(gv('nc_age_'+n)||'-')+' / 방문경로: '+(gv('nc_route_'+n)||'-')+(gv('nc_note_'+n)?' / '+gv('nc_note_'+n):''));
+  });
+  return list.length ? list.join('\n') : '미기재';
+}
+
+function getDateStr(val) {
+  try { var d = new Date(val+'T00:00:00'); return d.getFullYear()+'년 '+(d.getMonth()+1)+'월 '+d.getDate()+'일'; } catch(e) { return val; }
+}
+
+function showToast(msg) {
+  var t = document.getElementById('toast');
+  t.textContent = msg; t.style.display = 'block';
+  setTimeout(function(){t.style.display='none';},3000);
+}
+
+function closeOv() { document.getElementById('ov').style.display = 'none'; }
+
+// 인쇄
+window.printReport = function() {
+  const pvContent = document.getElementById('pvContent').innerHTML;
+  const printWin = window.open('', '_blank', 'width=800,height=1000');
+  printWin.document.write(`<!DOCTYPE html>
+<html lang="ko"><head><meta charset="UTF-8"><title>열방교회 셀보고서</title>
+<style>*{box-sizing:border-box;margin:0;padding:0;}body{font-family:'맑은 고딕',AppleGothic,Arial,sans-serif;padding:10mm;}@page{size:A4;margin:10mm;}</style>
+</head><body>${pvContent}</body></html>`);
+  printWin.document.close();
+  printWin.focus();
+  setTimeout(()=>{ printWin.print(); printWin.close(); }, 500);
+};
+
+document.getElementById('mcBtn').addEventListener('click', closeOv);
+document.getElementById('backBtn').addEventListener('click', closeOv);
+document.getElementById('ov').addEventListener('click', function(e){ if(e.target===this) closeOv(); });
+
+document.getElementById('subBtn').addEventListener('click', function() {
+  var checks = [
+    {id:'toEmail',label:'수신 이메일'},{id:'meetingDate',label:'모임 날짜'},
+    {id:'netName',label:'네트명'},{id:'cellName',label:'셀명'},
+    {id:'leaderName',label:'셀리더 이름'},{id:'meetingPlace',label:'모임 장소'},
+    {id:'attendCount',label:'참석 인원'},{id:'bibleRef',label:'성경 본문'},
+    {id:'sermonSummary',label:'설교/나눔 내용'}
+  ];
+  for (var i=0;i<checks.length;i++) {
+    if (!gv(checks[i].id)) { alert('⚠️ '+checks[i].label+'을(를) 입력해주세요.'); document.getElementById(checks[i].id).focus(); return; }
+  }
+  var rows = [
+    {l:'보고 일시',v:new Date().toLocaleString('ko-KR')},
+    {l:'모임 날짜',v:getDateStr(gv('meetingDate'))},{l:'모임 시간',v:gv('meetingTime')||'-'},
+    {l:'네트',v:gv('netName')},{l:'셀',v:gv('cellName')},{l:'셀리더',v:gv('leaderName')},
+    {l:'모임 장소',v:gv('meetingPlace')},{l:'전체 셀원',v:gv('totalMembers')?gv('totalMembers')+'명':'-'},
+    {l:'참석 인원',v:gv('attendCount')+'명'},{l:'결석 사유',v:gv('absentMembers')||'없음'},
+    {l:'성경 본문',v:gv('bibleRef')},{l:'말씀 요약',v:gv('sermonSummary')},
+    {l:'나눔 내용',v:gv('sharingContent')||'-'},{l:'새신자',v:getNc()},
+    {l:'기도 제목',v:gv('prayerReq')||'-'},{l:'특이사항',v:gv('specialNote')||'-'},
+    {l:'다음 모임',v:gv('nextPlan')||'-'}
+  ];
+  document.getElementById('pvContent').innerHTML = rows.map(function(r){return '<div class="pr"><div class="pl">'+r.l+'</div><div class="pv">'+r.v+'</div></div>';}).join('');
+  document.getElementById('ov').style.display = 'block';
+  document.getElementById('ov').scrollTop = 0;
+});
+
+document.getElementById('sendBtn').addEventListener('click', function() {
+  var btn = this;
+  btn.disabled = true; btn.textContent = '⏳ 전송 중...';
+  var params = {
+    to_email:gv('toEmail'), leader_name:gv('leaderName'), net_name:gv('netName'),
+    cell_name:gv('cellName'), meeting_date:getDateStr(gv('meetingDate')),
+    meeting_time:gv('meetingTime')||'-', meeting_place:gv('meetingPlace'),
+    total_members:gv('totalMembers')?gv('totalMembers')+'명':'-',
+    attend_count:gv('attendCount')+'명', absent_members:gv('absentMembers')||'없음',
+    bible_ref:gv('bibleRef'), sermon_summary:gv('sermonSummary'),
+    sharing_content:gv('sharingContent')||'-', newcomers:getNc(),
+    prayer_request:gv('prayerReq')||'-', special_note:gv('specialNote')||'-',
+    next_plan:gv('nextPlan')||'-', report_time:new Date().toLocaleString('ko-KR'),
+    email:gv('toEmail'), name:gv('leaderName')
+  };
+  emailjs.send('service_3x4uxds','template_gsb275c',params)
+    .then(function(){
+      closeOv();
+      alert('✅ 보고서가 성공적으로 전송되었습니다!');
+      if(confirm('폼을 초기화하시겠습니까?')) location.reload();
+    })
+    .catch(function(err){
+      alert('❌ 전송 실패: '+(err.text||err.message||JSON.stringify(err)));
+    })
+    .finally(function(){ btn.disabled=false; btn.innerHTML='📧 이메일로 전송'; });
+});
+</script>
+</body>
+</html>
