@@ -1,0 +1,2692 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>열방교회 출석부</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;}
+  :root{
+    --bg:#ffffff;--bg2:#f5f5f4;--bg3:#eeece9;
+    --text:#1a1a1a;--text2:#666;--text3:#999;
+    --border:#e0ddd8;--border2:#ccc;
+    --info-bg:#e6f1fb;--info-text:#185fa5;--info-border:#85b7eb;
+    --success-bg:#eaf3de;--success-text:#3b6d11;--success-border:#97c459;
+    --danger-bg:#fcebeb;--danger-text:#a32d2d;--danger-border:#f09595;
+    --warn-bg:#faeeda;--warn-text:#854f0b;--warn-border:#ef9f27;
+    --radius:8px;--radius-lg:12px;
+  }
+  @media(prefers-color-scheme:dark){
+    :root{
+      --bg:#1e1e1e;--bg2:#2a2a2a;--bg3:#333;
+      --text:#f0f0f0;--text2:#aaa;--text3:#777;
+      --border:#444;--border2:#555;
+      --info-bg:#0c2d4a;--info-text:#85b7eb;--info-border:#185fa5;
+      --success-bg:#1a2e0d;--success-text:#97c459;--success-border:#3b6d11;
+      --danger-bg:#2e0d0d;--danger-text:#f09595;--danger-border:#a32d2d;
+      --warn-bg:#2e1d05;--warn-text:#ef9f27;--warn-border:#854f0b;
+    }
+  }
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg3);color:var(--text);font-size:15px;}
+  .app{max-width:1200px;margin:0 auto;padding:1rem;}
+  .header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:12px;}
+  .header-title{font-size:22px;font-weight:600;margin-bottom:2px;}
+  .header-sub{font-size:13px;color:var(--text2);}
+  .date-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+  .tab-bar{display:flex;gap:4px;margin-bottom:1.5rem;border-bottom:1px solid var(--border);overflow-x:auto;}
+  .tab{padding:9px 18px;font-size:14px;font-weight:500;border:none;background:none;color:var(--text2);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap;}
+  .tab.active{color:var(--text);border-bottom:2px solid var(--text);}
+  .tab:hover{color:var(--text);}
+  .section{display:none;}.section.active{display:block;}
+  .card{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.25rem;margin-bottom:1rem;}
+  .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
+  input[type=text],input[type=number],select{
+    height:36px;padding:0 10px;font-size:14px;
+    border:1px solid var(--border2);border-radius:var(--radius);
+    background:var(--bg);color:var(--text);outline:none;
+  }
+  input:focus,select:focus{border-color:var(--info-text);}
+  button{
+    height:36px;padding:0 16px;font-size:13px;font-weight:500;
+    border:1px solid var(--border2);border-radius:var(--radius);
+    background:var(--bg);color:var(--text);cursor:pointer;white-space:nowrap;
+  }
+  button:hover{background:var(--bg2);}
+  button.primary{background:var(--text);color:var(--bg);border-color:var(--text);}
+  button.primary:hover{opacity:0.85;}
+  button.success{background:var(--success-bg);color:var(--success-text);border-color:var(--success-border);}
+  button.danger{background:var(--danger-bg);color:var(--danger-text);border-color:var(--danger-border);}
+  button.sm{height:28px;padding:0 10px;font-size:12px;}
+
+  /* 상태바 */
+  .save-bar{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:10px 14px;margin-bottom:1rem;display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+  .sync-dot{width:8px;height:8px;border-radius:50%;background:#ccc;flex-shrink:0;transition:background .3s;}
+  .sync-dot.online{background:#1D9E75;animation:pulse 1.5s infinite;}
+  .sync-dot.syncing{background:#EF9F27;animation:pulse .6s infinite;}
+  .sync-dot.error{background:#E24B4A;}
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.3;}}
+  .save-status{font-size:12px;color:var(--text2);}
+  .save-status.saved{color:var(--success-text);font-weight:500;}
+  .save-status.unsaved{color:var(--warn-text);}
+  .save-status.error{color:var(--danger-text);}
+
+  /* 설정 오버레이 */
+  .overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;z-index:1000;}
+  .overlay.hidden{display:none;}
+  .modal{background:var(--bg);border-radius:var(--radius-lg);padding:2rem;width:90%;max-width:520px;border:1px solid var(--border);box-shadow:0 4px 24px rgba(0,0,0,.15);}
+  .modal h2{font-size:18px;font-weight:600;margin-bottom:4px;}
+  .modal p{font-size:13px;color:var(--text2);margin-bottom:1.5rem;line-height:1.6;}
+  .modal label{font-size:13px;font-weight:500;display:block;margin-bottom:4px;}
+  .modal input{width:100%;margin-bottom:12px;}
+  .modal-footer{display:flex;gap:8px;justify-content:flex-end;margin-top:1.5rem;}
+  .field-group{margin-bottom:12px;}
+  #loginOverlay .modal{max-width:400px;}
+
+  /* 네트/셀/카드 */
+  .net-badge{font-size:11px;padding:2px 9px;border-radius:10px;background:var(--info-bg);color:var(--info-text);}
+  .cell-label{font-size:12px;color:var(--text2);padding:4px 8px;background:var(--bg2);border-radius:var(--radius);margin-bottom:6px;}
+  .member-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:8px;margin-top:6px;}
+  .member-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:10px 12px;}
+  .member-name{font-size:14px;font-weight:600;margin-bottom:7px;}
+  .att-btns{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:7px;}
+  .att-btn{padding:3px 10px;font-size:11px;font-weight:500;border-radius:10px;border:1px solid var(--border2);cursor:pointer;background:var(--bg);color:var(--text2);height:auto;}
+  .att-btn:hover{background:var(--bg3);}
+  .att-btn.att{background:var(--success-bg);color:var(--success-text);border-color:var(--success-border);}
+  .att-btn.abs{background:var(--danger-bg);color:var(--danger-text);border-color:var(--danger-border);}
+  .att-btn.late{background:var(--warn-bg);color:var(--warn-text);border-color:var(--warn-border);}
+  .course-chips{display:flex;flex-wrap:wrap;gap:3px;}
+  .course-chip{font-size:10px;padding:2px 7px;border-radius:8px;border:1px solid var(--border);cursor:pointer;background:var(--bg);color:var(--text2);height:auto;}
+  .course-chip:hover{background:var(--bg3);}
+  .course-chip.done{background:var(--info-bg);color:var(--info-text);border-color:var(--info-border);}
+
+  /* 대시보드 */
+  .stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px;margin-bottom:1.5rem;}
+  .stat-card{background:var(--bg2);border-radius:var(--radius);padding:1rem;text-align:center;}
+  .stat-num{font-size:28px;font-weight:600;margin-bottom:3px;}
+  .stat-lbl{font-size:12px;color:var(--text2);}
+  .dash-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;}
+  @media(max-width:700px){.dash-grid{grid-template-columns:1fr;}}
+  .net-stat-row{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--border);}
+  .net-stat-row:last-child{border-bottom:none;}
+  .net-stat-name{font-size:13px;min-width:105px;}
+  .bar-bg{flex:1;height:7px;background:var(--bg3);border-radius:4px;overflow:hidden;}
+  .bar-fill{height:7px;border-radius:4px;}
+  .bar-green{background:#1D9E75;}
+  .bar-blue{background:#185FA5;}
+  .net-stat-pct{font-size:11px;min-width:70px;text-align:right;color:var(--text2);}
+
+  /* 이력 */
+  .hist-table-wrap{overflow-x:auto;}
+  .hist-table{width:100%;border-collapse:collapse;font-size:13px;}
+  .hist-table th{padding:6px 8px;font-size:11px;font-weight:600;border-bottom:1px solid var(--border);text-align:center;white-space:nowrap;}
+  .hist-table th:first-child,.hist-table th:nth-child(2){text-align:left;}
+  .hist-table td{padding:5px 8px;border-bottom:1px solid var(--border);}
+  .att-chip{font-size:11px;padding:2px 6px;border-radius:6px;}
+
+  /* 관리 */
+  .cell-block{margin-bottom:12px;border:1px solid var(--border);border-radius:var(--radius);padding:10px;}
+  .cell-row{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--border);}
+  .cell-row:last-of-type{border-bottom:none;}
+
+  /* 토스트 */
+  .toast{position:fixed;bottom:28px;right:28px;background:var(--text);color:var(--bg);padding:11px 20px;border-radius:var(--radius);font-size:13px;opacity:0;transition:opacity .3s;pointer-events:none;z-index:9999;max-width:320px;}
+  .toast.show{opacity:1;}
+
+  @media(max-width:600px){.header{flex-direction:column;}.member-grid{grid-template-columns:1fr;}}
+  .period-btn{height:32px;padding:0 14px;font-size:13px;font-weight:500;border:1px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text2);cursor:pointer;}
+  .period-btn:hover{background:var(--bg2);}
+  .active-period{background:var(--text)!important;color:var(--bg)!important;border-color:var(--text)!important;}
+
+  @media print {
+    body{background:#fff!important;}
+    .save-bar,.tab-bar{display:none!important;}
+    .section{display:none!important;}
+    #sec-dash{display:block!important;}
+    .card{break-inside:avoid;box-shadow:none!important;border:1px solid #ddd!important;}
+    @page{size:A4;margin:15mm;}
+  }
+</style>
+</head>
+<body>
+
+<!-- Firebase 설정 모달 -->
+<div class="overlay hidden" id="configOverlay">
+  <div class="modal">
+    <h2>🔥 Firebase 설정</h2>
+    <p>Firebase 콘솔에서 복사한 설정값을 입력하세요.<br>한 번만 입력하면 이 기기에 저장됩니다.</p>
+    <div class="field-group">
+      <label>API Key</label>
+      <input type="text" id="cfg_apiKey" placeholder="AIzaSy...">
+    </div>
+    <div class="field-group">
+      <label>Project ID</label>
+      <input type="text" id="cfg_projectId" placeholder="yeolbang-church">
+    </div>
+    <div class="field-group">
+      <label>App ID</label>
+      <input type="text" id="cfg_appId" placeholder="1:123456789:web:abc...">
+    </div>
+    <div style="font-size:12px;color:var(--text2);margin-top:-4px;margin-bottom:8px;">
+      ※ authDomain, storageBucket, messagingSenderId는 자동으로 구성됩니다.
+    </div>
+    <div class="modal-footer">
+      <button class="primary" onclick="applyConfig()">연결하기</button>
+    </div>
+  </div>
+</div>
+
+<!-- 소속 수정 모달 -->
+<div class="overlay hidden" id="editMemberOverlay" style="z-index:200;">
+  <div class="modal" style="max-width:440px;width:100%;">
+    <h2 style="margin-bottom:1rem;">✏️ 소속 수정</h2>
+    <div style="display:grid;gap:10px;margin-bottom:1.5rem;">
+      <div style="display:flex;flex-direction:column;gap:4px;">
+        <label style="font-size:12px;color:var(--text2);font-weight:500;">이름</label>
+        <input type="text" id="editMemberNameInput" style="height:36px;font-size:14px;font-weight:600;border:1px solid var(--primary);border-radius:var(--radius);padding:0 10px;">
+      </div>
+      <div style="display:flex;flex-direction:column;gap:4px;">
+        <label style="font-size:12px;color:var(--text2);font-weight:500;">네트</label>
+        <select id="editNet" style="height:36px;font-size:13px;"></select>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:4px;">
+        <label style="font-size:12px;color:var(--text2);font-weight:500;">G12 <span style="color:var(--text3);">(선택 안 하면 네트 직속)</span></label>
+        <select id="editG12" style="height:36px;font-size:13px;"></select>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:4px;">
+        <label style="font-size:12px;color:var(--text2);font-weight:500;">144셀 <span style="color:var(--text3);">(선택 안 하면 G12 직속)</span></label>
+        <select id="edit144" style="height:36px;font-size:13px;"></select>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:4px;">
+        <label style="font-size:12px;color:var(--text2);font-weight:500;">1728셀 <span style="color:var(--text3);">(선택 안 하면 144셀 직속)</span></label>
+        <select id="edit1728" style="height:36px;font-size:13px;"></select>
+      </div>
+    </div>
+    <div class="modal-footer" style="display:flex;gap:8px;justify-content:flex-end;">
+      <button onclick="closeEditMember()" style="height:36px;padding:0 16px;font-size:13px;">취소</button>
+      <button class="primary" onclick="saveEditMember()" style="height:36px;padding:0 16px;font-size:13px;">저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- 로그인 오버레이 -->
+<div class="overlay" id="loginOverlay">
+  <div class="modal" style="text-align:center;max-width:400px;">
+    <div style="font-size:32px;margin-bottom:12px;">⛪</div>
+    <h2 style="margin-bottom:6px;">열방교회 출석부</h2>
+    <p style="margin-bottom:1.5rem;">Google 계정으로 로그인하여 출석부를 사용하세요.<br>관리자로부터 접근 권한을 받은 계정만 이용할 수 있습니다.</p>
+    <div id="loginMsg" style="font-size:13px;color:var(--danger-text);margin-bottom:1rem;min-height:18px;"></div>
+    <button onclick="doSignIn()" style="width:100%;height:44px;font-size:14px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:10px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--bg);cursor:pointer;">
+      <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#4285F4" d="M44.5 20H24v8.5h11.8C34.7 33.9 30.1 37 24 37c-7.2 0-13-5.8-13-13s5.8-13 13-13c3.1 0 5.9 1.1 8.1 2.9l6.4-6.4C34.6 4.1 29.6 2 24 2 11.8 2 2 11.8 2 24s9.8 22 22 22c11 0 21-8 21-22 0-1.3-.2-2.7-.5-4z"/></svg>
+      Google 계정으로 로그인
+    </button>
+    
+  </div>
+</div>
+
+<div id="appContent" style="display:none;">
+<div class="app">
+  <!-- 헤더 -->
+  <div class="header">
+    <div>
+      <div class="header-title">⛪ 열방교회 출석부</div>
+      <div class="header-sub">주일 출석 관리 시스템</div>
+    </div>
+    <div class="date-row">
+      <span style="font-size:13px;color:var(--text2);">주일 선택</span>
+      <select id="sundayPicker" onchange="onSundayPickerChange()" style="height:34px;font-size:13px;min-width:180px;"></select>
+      <span id="curDate" style="font-size:15px;font-weight:600;margin-left:4px;"></span>
+    </div>
+  </div>
+
+  <!-- 저장바 -->
+  <div class="save-bar">
+    <div class="sync-dot" id="syncDot"></div>
+    <span id="connLabel" style="font-size:13px;font-weight:500;color:var(--text2);">연결 중...</span>
+    <div id="userInfo" style="display:flex;align-items:center;gap:8px;margin-left:4px;"></div>
+    <button class="success" onclick="saveToCloud()">☁️ 클라우드 저장</button>
+    <button onclick="loadFromCloud(true)">🔄 새로고침</button>
+    <div style="position:relative;display:inline-block;">
+      <button id="dataMenuBtn" onclick="toggleDataMenu()" style="height:34px;padding:0 12px;font-size:13px;">🗂️ 데이터 ▾</button>
+      <div id="dataMenu" style="display:none;position:absolute;top:38px;left:0;background:var(--bg);border:1px solid var(--border2);border-radius:var(--radius);box-shadow:0 4px 12px rgba(0,0,0,.15);z-index:100;min-width:140px;overflow:hidden;">
+        <button onclick="exportJSON();toggleDataMenu()" style="width:100%;text-align:left;padding:10px 14px;font-size:13px;border:none;background:none;cursor:pointer;color:var(--text);">📤 JSON 백업</button>
+        <button onclick="document.getElementById('importFile').click();toggleDataMenu()" style="width:100%;text-align:left;padding:10px 14px;font-size:13px;border:none;background:none;cursor:pointer;color:var(--text);">📥 JSON 복원</button>
+        <button onclick="exportCSV();toggleDataMenu()" style="width:100%;text-align:left;padding:10px 14px;font-size:13px;border:none;background:none;cursor:pointer;color:var(--text);">📊 CSV 내보내기</button>
+      </div>
+    </div>
+    <input type="file" id="importFile" accept=".json" style="display:none;" onchange="importJSON(event)">
+    <button onclick="showConfig()" style="margin-left:auto;display:none;">⚙️ DB 설정</button>
+    <a href="./report.html" target="_blank" style="height:34px;padding:0 14px;font-size:13px;font-weight:500;border:1px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);cursor:pointer;display:inline-flex;align-items:center;gap:6px;text-decoration:none;">📝 셀보고서</a>
+    <span class="save-status" id="saveStatus" style="margin-left:8px;"></span>
+    <span style="font-size:11px;color:var(--text3);" id="lastSaved"></span>
+  </div>
+
+  <!-- 탭 -->
+  <div class="tab-bar">
+    <button class="tab active" onclick="showTab('dash')">대시보드</button>
+    <button class="tab" onclick="showTab('sunday')">주일출석</button>
+    <button class="tab" onclick="showTab('cell')">셀출석</button>
+    <button class="tab" onclick="showTab('manage')">셀 · 구성원 관리</button>
+    
+  </div>
+
+  <!-- 주일출석 -->
+  <div class="section" id="sec-sunday">
+    <div class="card">
+      <div class="row">
+        <input type="text" id="sundaySearch" placeholder="이름 검색..." oninput="renderSunday()" style="width:180px;">
+        <select id="sundayFilterNet"><option value="">전체 네트</option></select>
+
+      </div>
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:1rem;align-items:center;">
+      <span style="font-size:12px;color:var(--text2);">교육과정 →</span>
+      <span style="font-size:11px;padding:2px 8px;border-radius:8px;background:var(--bg2);border:1px solid var(--border);color:var(--text2);">새신자</span>
+      <span style="font-size:11px;padding:2px 8px;border-radius:8px;background:var(--bg2);border:1px solid var(--border);color:var(--text2);">라이프1</span>
+      <span style="font-size:11px;padding:2px 8px;border-radius:8px;background:var(--bg2);border:1px solid var(--border);color:var(--text2);">엔카운터</span>
+      <span style="font-size:11px;padding:2px 8px;border-radius:8px;background:var(--bg2);border:1px solid var(--border);color:var(--text2);">라이프2</span>
+      <span style="font-size:11px;padding:2px 8px;border-radius:8px;background:var(--bg2);border:1px solid var(--border);color:var(--text2);">DT1</span>
+      <span style="font-size:11px;padding:2px 8px;border-radius:8px;background:var(--bg2);border:1px solid var(--border);color:var(--text2);">DT2</span>
+      <span style="font-size:11px;padding:2px 8px;border-radius:8px;background:var(--bg2);border:1px solid var(--border);color:var(--text2);">DT3</span>
+      <span style="font-size:11px;padding:2px 8px;border-radius:8px;background:var(--bg2);border:1px solid var(--border);color:var(--text2);">DT4</span>
+      <span style="font-size:11px;padding:2px 8px;border-radius:8px;background:var(--bg2);border:1px solid var(--border);color:var(--text2);">DT5</span>
+      <span style="font-size:11px;padding:2px 8px;border-radius:8px;background:var(--bg2);border:1px solid var(--border);color:var(--text2);">DT6</span>
+      <span style="font-size:11px;color:var(--info-text);">파란색 = 이수완료</span>
+    </div>
+    <div id="sundayList"></div>
+  </div>
+
+  <!-- 셀출석 -->
+  <div class="section" id="sec-cell">
+    <div class="card">
+      <div class="row">
+        <input type="text" id="cellSearch" placeholder="이름 검색..." oninput="renderCellAtt()" style="width:180px;">
+        <select id="cellFilterNet"><option value="">전체 네트</option></select>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;margin-top:10px;padding-top:8px;border-top:1px solid var(--border);">
+        <span style="font-size:13px;color:var(--text2);font-weight:500;">셀모임 날짜</span>
+        <select id="cellDayPicker" onchange="onCellDayPickerChange()" style="height:32px;font-size:13px;min-width:160px;"></select>
+        <span id="cellDateLabel" style="font-size:12px;color:var(--text2);"></span>
+      </div>
+    </div>
+    <div id="cellAttList"></div>
+  </div>
+
+  <!-- 대시보드 -->
+  <div class="section active" id="sec-dash">
+
+    <!-- 기간 선택 컨트롤 -->
+    <div class="card" style="margin-bottom:1rem;">
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+        <span style="font-size:14px;font-weight:600;">통계 기간</span>
+        <div style="display:flex;gap:4px;">
+          <button id="btnWeek"    class="period-btn active-period" onclick="setPeriod('week')">주간</button>
+          <button id="btnMonth"   class="period-btn" onclick="setPeriod('month')">월간</button>
+          <button id="btnQuarter" class="period-btn" onclick="setPeriod('quarter')">분기별</button>
+          <button id="btnYear"    class="period-btn" onclick="setPeriod('year')">연간</button>
+        </div>
+        <select id="dashYear" style="height:34px;width:90px;font-size:13px;"></select>
+        <select id="dashMonth" style="height:34px;width:90px;font-size:13px;"></select>
+        <select id="dashQuarter" style="height:34px;width:110px;font-size:13px;display:none;">
+          <option value="1">1분기 (1~3월)</option>
+          <option value="2">2분기 (4~6월)</option>
+          <option value="3">3분기 (7~9월)</option>
+          <option value="4">4분기 (10~12월)</option>
+        </select>
+        <select id="dashWeek" style="height:34px;width:160px;font-size:13px;display:none;"></select>
+        <span id="dashPeriodLabel" style="font-size:13px;color:var(--text2);margin-left:4px;"></span>
+        <button onclick="printDash()" style="margin-left:auto;height:34px;padding:0 14px;font-size:13px;display:flex;align-items:center;gap:6px;">🖨️ 인쇄</button>
+      </div>
+    </div>
+
+    <!-- 요약 카드 -->
+    <div class="stat-grid" id="topStats"></div>
+
+    <!-- 주일출석 / 셀출석 분포 -->
+    <div class="card">
+      <div style="font-size:15px;font-weight:600;margin-bottom:1rem;">출석 현황</div>
+      <div id="attDist" style="display:flex;gap:1.5rem;flex-wrap:wrap;"></div>
+    </div>
+
+
+
+    <!-- 출석 추이 그래프 -->
+    <div class="card">
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:1rem;">
+        <div style="font-size:15px;font-weight:600;">📈 출석 추이</div>
+
+      </div>
+      <div style="display:flex;gap:12px;margin-bottom:12px;flex-wrap:wrap;">
+        <label style="display:flex;align-items:center;gap:4px;font-size:13px;cursor:pointer;">
+          <input type="checkbox" id="trendShowSunday" checked onchange="renderTrendChart()"> <span style="color:#3B6D11;font-weight:600;">주일출석</span>
+        </label>
+        <label style="display:flex;align-items:center;gap:4px;font-size:13px;cursor:pointer;">
+          <input type="checkbox" id="trendShowCell" checked onchange="renderTrendChart()"> <span style="color:#185FA5;font-weight:600;">셀출석</span>
+        </label>
+        <label style="display:flex;align-items:center;gap:4px;font-size:13px;cursor:pointer;">
+          <input type="checkbox" id="trendShowNew" checked onchange="renderTrendChart()"> <span style="color:#c8973a;font-weight:600;">새신자</span>
+        </label>
+      </div>
+      <canvas id="trendCanvas" style="width:100%;height:260px;display:block;"></canvas>
+    </div>
+
+    <!-- 네트별 / 교육과정 -->
+    <div class="dash-grid">
+      <div class="card">
+        <div style="font-size:15px;font-weight:600;margin-bottom:1rem;">네트별 주일출석률</div>
+        <div id="netStats"></div>
+      </div>
+      <div class="card">
+        <div style="font-size:15px;font-weight:600;margin-bottom:1rem;">교육과정 이수 현황</div>
+        <div id="courseStats"></div>
+      </div>
+    </div>
+
+    <!-- 개인별 내역 -->
+    <div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:1rem;">
+        <div style="font-size:15px;font-weight:600;">개인별 출석 내역</div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+          <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+            <input type="text" id="dashSearch" placeholder="이름 검색..."
+              style="width:150px;height:32px;font-size:13px;">
+            <button id="dashSearchClear" style="height:32px;padding:0 10px;font-size:12px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--bg);cursor:pointer;">초기화</button>
+            <select id="dashFilterNet" style="height:32px;font-size:13px;"><option value="">전체 네트</option></select>
+          </div>
+        </div>
+      </div>
+      <div id="dashMemberList"></div>
+    </div>
+  </div>
+
+  <!-- 관리 -->
+  <div class="section" id="sec-manage">
+
+    <!-- 셀 관리 카드 -->
+    <div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:1rem;">
+        <div style="font-size:15px;font-weight:600;">셀 관리</div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <label style="font-size:13px;color:var(--text2);">네트 선택</label>
+          <select id="manageNet" style="width:180px;"></select>
+        </div>
+      </div>
+      <div id="manageContent"></div>
+      <div style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border);">
+        <div style="font-size:13px;font-weight:600;margin-bottom:8px;">셀 추가</div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:8px;">
+          <div style="display:flex;flex-direction:column;gap:3px;">
+            <label style="font-size:11px;color:var(--text2);">G12 추가</label>
+            <div style="display:flex;gap:6px;">
+              <input type="text" id="newG12Name" placeholder="G12 이름" style="width:140px;">
+              <button class="primary" onclick="addG12()">+ 추가</button>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:3px;">
+            <label style="font-size:11px;color:var(--text2);">144셀 추가 (G12 선택 후)</label>
+            <div style="display:flex;gap:6px;">
+              <select id="manage144Parent" style="width:130px;"></select>
+              <input type="text" id="new144Name" placeholder="144셀 이름" style="width:120px;">
+              <button class="primary" onclick="add144()">+ 추가</button>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:3px;">
+            <label style="font-size:11px;color:var(--text2);">1728셀 추가 (144셀 선택 후)</label>
+            <div style="display:flex;gap:6px;">
+              <select id="manage1728Parent144" style="width:120px;"></select>
+              <input type="text" id="new1728Name" placeholder="1728셀 이름" style="width:120px;">
+              <button class="primary" onclick="add1728()">+ 추가</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 구성원 추가 카드 -->
+    <div class="card">
+      <div style="font-size:15px;font-weight:600;margin-bottom:1rem;">구성원 추가</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;align-items:end;">
+        <div style="display:flex;flex-direction:column;gap:4px;">
+          <label style="font-size:12px;color:var(--text2);font-weight:500;">이름</label>
+          <input type="text" id="newMemberName" placeholder="이름 입력">
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px;">
+          <label style="font-size:12px;color:var(--text2);font-weight:500;">네트</label>
+          <select id="newMemberNet"></select>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px;">
+          <label style="font-size:12px;color:var(--text2);font-weight:500;">G12</label>
+          <select id="newMemberG12"></select>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px;">
+          <label style="font-size:12px;color:var(--text2);font-weight:500;">144셀</label>
+          <select id="newMember144"></select>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px;">
+          <label style="font-size:12px;color:var(--text2);font-weight:500;">1728셀</label>
+          <select id="newMember1728"></select>
+        </div>
+        <button class="primary" onclick="addMember()" style="height:36px;">+ 추가</button>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;margin-top:10px;flex-wrap:wrap;">
+        <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;">
+          <input type="checkbox" id="newMemberIsNew" onchange="toggleNewMemberDate()">
+          <span style="font-weight:600;color:#c8973a;">🌱 새신자</span>
+        </label>
+        <div id="newMemberDateWrap" style="display:none;align-items:center;gap:6px;">
+          <span style="font-size:12px;color:var(--text2);">등록일</span>
+          <input type="date" id="newMemberDate" style="height:30px;font-size:12px;border:1px solid var(--border2);border-radius:var(--radius);padding:0 6px;">
+        </div>
+      </div>
+      <div style="margin-top:8px;font-size:12px;color:var(--text2);">
+        ※ 네트만 선택해도 추가 가능합니다. G12/144셀/1728셀은 해당하는 경우에만 선택하세요.
+      </div>
+    </div>
+
+  </div>
+
+  <!-- 이력 -->
+  
+</div>
+
+</div><!-- appContent -->
+<div class="toast" id="toast"></div>
+
+<!-- Firebase SDK -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, doc, setDoc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+// ── 상수 ────────────────────────────────────────────
+const NETS = ["강민호","고정희","김영철","김정여","김태영","김한수","김현숙","김혜경",
+              "박성원","박혜경","백기철","오상용","안주영","양규식","양선아","양현아","유재원",
+              "이맑음","이성탄","이수진","이영근","이정화","장성수","현소라","현희순"];
+const COURSES = ["새신자","라이프클래스1","엔카운터","라이프클래스2","DT1","DT2","DT3","DT4","DT5","DT6"];
+const COURSE_SHORT = ["새신자","라이프1","엔카운터","라이프2","DT1","DT2","DT3","DT4","DT5","DT6"];
+const ATT = ["att","abs"];
+const ATT_LBL = {att:"출석",abs:"결석"};
+const ATT_SYM = {att:"출",abs:"결"};
+const ATT_COLOR = {att:"#3B6D11",abs:"#A32D2D"};
+const ATT_BG = {att:"#EAF3DE",abs:"#FCEBEB"};
+const LS_CFG = 'yeolbang_firebase_cfg';
+const LS_STATE = 'yeolbang_local_v1';
+const DOC_ID = 'main';
+
+// ── 상태 ────────────────────────────────────────────
+let db = null;
+let auth = null;
+let currentUser = null;
+let unsubscribe = null;
+const _now = new Date(); let currentDate = {y:_now.getFullYear(), m:_now.getMonth()+1, d:_now.getDate()};
+let state = {nets:{}};
+let dirty = false;
+let autoTimer = null;
+let realtimeEnabled = false;
+
+// ── Firebase 초기화 ──────────────────────────────────
+window.applyConfig = function() {
+  const apiKey     = document.getElementById('cfg_apiKey').value.trim();
+  const projectId  = document.getElementById('cfg_projectId').value.trim();
+  const appId      = document.getElementById('cfg_appId').value.trim();
+  if (!apiKey || !projectId || !appId) { showToast('모든 항목을 입력해주세요'); return; }
+  const cfg = {apiKey, projectId, appId,
+    authDomain: `${projectId}.firebaseapp.com`,
+    storageBucket: `${projectId}.appspot.com`,
+  };
+  localStorage.setItem(LS_CFG, JSON.stringify(cfg));
+  document.getElementById('configOverlay').classList.add('hidden');
+  initFirebase(cfg);
+};
+
+window.showConfig = function() {
+  const saved = getSavedConfig();
+  if (saved) {
+    document.getElementById('cfg_apiKey').value = saved.apiKey || '';
+    document.getElementById('cfg_projectId').value = saved.projectId || '';
+    document.getElementById('cfg_appId').value = saved.appId || '';
+  }
+  document.getElementById('configOverlay').classList.remove('hidden');
+};
+
+function getSavedConfig() {
+  try { return JSON.parse(localStorage.getItem(LS_CFG)); } catch { return null; }
+}
+
+function initFirebase(cfg) {
+  try {
+    const app = initializeApp(cfg);
+    db = getFirestore(app);
+    auth = getAuth(app);
+    setConnStatus('syncing', '연결 중...');
+    // 로그인 상태 감지
+    onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        currentUser = user;
+        // 허용 이메일 확인
+        const allowed = await checkAllowedEmail(user.email);
+        if (!allowed) {
+          await signOut(auth);
+          currentUser = null;
+          showLoginScreen('접근 권한이 없는 계정입니다. 관리자에게 문의하세요.');
+          return;
+        }
+        hideLoginScreen();
+        updateUserInfo(user);
+        loadFromCloud(false);
+      } else {
+        currentUser = null;
+        showLoginScreen('');
+      }
+    });
+  } catch(e) {
+    setConnStatus('error', 'DB 연결 실패');
+    showToast('❌ Firebase 연결 실패: ' + e.message);
+  }
+}
+
+async function checkAllowedEmail(email) {
+  if (!db) return false;
+  try {
+    const snap = await getDoc(doc(db, 'config', 'allowedEmails'));
+    if (!snap.exists()) return true; // 목록 없으면 일단 허용 (최초 설정 전)
+    const list = snap.data().list || [];
+    return list.includes(email);
+  } catch(e) {
+    return true; // Firestore 규칙 적용 전이면 허용
+  }
+}
+
+function showLoginScreen(msg) {
+  const lo = document.getElementById('loginOverlay');
+  lo.classList.remove('hidden');
+  lo.style.display = 'flex';
+  document.getElementById('appContent').style.display = 'none';
+  if (msg) document.getElementById('loginMsg').textContent = msg;
+  setConnStatus('error', '로그인 필요');
+}
+
+function hideLoginScreen() {
+  const lo = document.getElementById('loginOverlay');
+  lo.classList.add('hidden');
+  lo.style.display = 'none';
+  document.getElementById('appContent').style.display = '';
+  // 주일 드롭다운 초기화 + 그래프 초기화
+  setTimeout(() => {
+    initSundayPicker();
+    setDate(true);
+    setTimeout(() => renderTrendChart(), 500);
+  }, 100);
+}
+
+function updateUserInfo(user) {
+  const el = document.getElementById('userInfo');
+  if (el) el.innerHTML = `
+    <img src="${user.photoURL||''}" style="width:28px;height:28px;border-radius:50%;object-fit:cover;border:1px solid var(--border);" onerror="this.style.display='none'">
+    <span style="font-size:13px;color:var(--text2);">${user.displayName||user.email}</span>
+    <button onclick="doSignOut()" style="height:28px;padding:0 10px;font-size:12px;">로그아웃</button>
+  `;
+}
+
+window.doSignIn = async function() {
+  if (!auth) { showToast('Firebase가 연결되지 않았습니다'); return; }
+  try {
+    const provider = new GoogleAuthProvider();
+    await signInWithPopup(auth, provider);
+  } catch(e) {
+    showToast('❌ 로그인 실패: ' + e.message);
+  }
+};
+
+window.doSignOut = async function() {
+  if (!auth) return;
+  await signOut(auth);
+  showToast('로그아웃 되었습니다');
+};
+
+// ── 실시간 리스닝 ────────────────────────────────────
+function startRealtime() {
+  if (!db || realtimeEnabled) return;
+  realtimeEnabled = true;
+  const ref = doc(db, 'attendance', DOC_ID);
+  unsubscribe = onSnapshot(ref, snap => {
+    if (snap.exists()) {
+      const data = snap.data();
+      if (data.state) {
+        state = JSON.parse(data.state);
+        // NETS에 있는데 state에 없는 네트 자동 초기화
+        if(!state.nets) state.nets = {};
+        NETS.forEach(n => {
+          if(!state.nets[n]) state.nets[n] = {g12:{}, members:[]};
+          if(!state.nets[n].members) state.nets[n].members = [];
+          if(!state.nets[n].g12) state.nets[n].g12 = {};
+        });
+        if (data.currentDate) currentDate = data.currentDate;
+        populateFilters(); setDate(true);
+        setConnStatus('online', '실시간 연결됨');
+        setStatus('클라우드 동기화 완료 ✓', 'saved');
+        const savedAt = data.savedAt || '';
+        if (savedAt) document.getElementById('lastSaved').textContent = '최종저장: ' + savedAt;
+        // 현재 활성 탭에 맞게 자동 렌더링
+        const activeTab = document.querySelector('.tab.active');
+        const t = activeTab?.getAttribute('onclick')?.match(/showTab\('(\w+)'\)/)?.[1] || 'dash';
+        if (t === 'dash') { initDashControls(); renderDash(); }
+        else if (t === 'sunday') { populateSundayFilters(); renderSunday(); }
+        else if (t === 'cell') { populateCellFilters(); renderCellAtt(); }
+        else if (t === 'manage') renderManage();
+        // 대시보드는 항상 갱신
+        if (t !== 'dash') { initDashControls(); renderDash(); }
+      }
+    }
+  }, err => {
+    setConnStatus('error', 'DB 오류');
+    showToast('⚠️ 실시간 연결 오류: ' + err.message);
+  });
+}
+
+// ── 클라우드 저장/불러오기 ───────────────────────────
+window.saveToCloud = async function() {
+  if (!db) { showToast('⚠️ Firebase가 연결되지 않았습니다. ⚙️ DB 설정을 먼저 해주세요'); return; }
+  if (!currentUser) { showToast('⚠️ 로그인이 필요합니다'); showLoginScreen(''); return; }
+  setConnStatus('syncing', '저장 중...');
+  try {
+    const savedAt = new Date().toLocaleString('ko-KR');
+    await setDoc(doc(db, 'attendance', DOC_ID), {
+      state: JSON.stringify(state),
+      currentDate,
+      savedAt,
+      updatedAt: Date.now()
+    });
+    dirty = false;
+    setStatus('클라우드 저장 완료 ✓', 'saved');
+    document.getElementById('lastSaved').textContent = '최종저장: ' + savedAt;
+    setConnStatus('online', '실시간 연결됨');
+    showToast('☁️ 클라우드에 저장되었습니다');
+  } catch(e) {
+    setConnStatus('error', '저장 실패');
+    showToast('❌ 저장 실패: ' + e.message);
+  }
+};
+
+window.loadFromCloud = async function(showMsg) {
+  if (!db) { showToast('⚠️ Firebase가 연결되지 않았습니다'); return; }
+  setConnStatus('syncing', '불러오는 중...');
+  try {
+    const snap = await getDoc(doc(db, 'attendance', DOC_ID));
+    if (snap.exists()) {
+      const data = snap.data();
+      if (data.state) state = JSON.parse(data.state);
+      if (data.currentDate) {
+        currentDate = data.currentDate;
+        // 주일 드롭다운 동기화
+        const _sp=document.getElementById('sundayPicker');
+        if(_sp){const _k=`${currentDate.y}-${String(currentDate.m).padStart(2,'0')}-${String(currentDate.d).padStart(2,'0')}`;if(_sp.querySelector(`option[value="${_k}"]`))_sp.value=_k;}
+      }
+      const savedAt = data.savedAt || '';
+      if (savedAt) document.getElementById('lastSaved').textContent = '최종저장: ' + savedAt;
+      setStatus('동기화 완료 ✓', 'saved');
+      if (showMsg) showToast('🔄 클라우드에서 불러왔습니다');
+    } else {
+      initState();
+      setStatus('클라우드 데이터 없음', '');
+      if (showMsg) showToast('☁️ 저장된 데이터가 없습니다');
+    }
+    setConnStatus('online', '실시간 연결됨');
+    populateFilters(); setDate(true);
+    initDashControls();
+    startRealtime();
+  } catch(e) {
+    setConnStatus('error', 'DB 오류');
+    showToast('❌ 불러오기 실패: ' + e.message);
+    loadLocal();
+  }
+};
+
+function loadLocal() {
+  try {
+    const raw = localStorage.getItem(LS_STATE);
+    if (raw) { const d = JSON.parse(raw); state = d.state || {}; }
+    else initState();
+  } catch { initState(); }
+  populateFilters(); setDate(true);
+}
+
+// ── 상태 표시 ─────────────────────────────────────────
+function setConnStatus(type, label) {
+  const dot = document.getElementById('syncDot');
+  const lbl = document.getElementById('connLabel');
+  dot.className = 'sync-dot ' + type;
+  if (lbl) lbl.textContent = label;
+  const colors = {online:'var(--info-text)', syncing:'var(--warn-text)', error:'var(--danger-text)'};
+  if (lbl) lbl.style.color = colors[type] || 'var(--text2)';
+}
+
+function setStatus(msg, cls) {
+  const el = document.getElementById('saveStatus');
+  if (!el) return;
+  el.textContent = msg;
+  el.className = 'save-status' + (cls ? ' ' + cls : '');
+}
+
+function markDirty() {
+  dirty = true;
+  setStatus('저장되지 않음 (변경사항 있음)', 'unsaved');
+  clearTimeout(autoTimer);
+  autoTimer = setTimeout(() => { if(dirty) saveToCloud(); }, 60000);
+}
+
+// ── JSON / CSV ────────────────────────────────────────
+window.exportJSON = function() {
+  download(JSON.stringify({state, currentDate, exportedAt: new Date().toISOString()}, null, 2),
+    '열방교회_출석부_' + getDateKey() + '.json', 'application/json');
+  showToast('📤 JSON 백업 완료');
+};
+
+window.importJSON = function(e) {
+  const file = e.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      const data = JSON.parse(ev.target.result);
+      if (data.state) state = data.state;
+      if (data.currentDate) {
+        currentDate = data.currentDate;
+        // 주일 드롭다운 동기화
+        const _sp=document.getElementById('sundayPicker');
+        if(_sp){const _k=`${currentDate.y}-${String(currentDate.m).padStart(2,'0')}-${String(currentDate.d).padStart(2,'0')}`;if(_sp.querySelector(`option[value="${_k}"]`))_sp.value=_k;}
+      }
+      populateFilters(); setDate(true);
+      markDirty();
+      showToast('📥 불러왔습니다 — 클라우드 저장을 눌러 반영하세요');
+    } catch { showToast('❌ 파일 형식 오류'); }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+};
+
+window.exportCSV = function() {
+  const dk = getDateKey();
+  const rows = [['네트','셀','이름','출석상태',...COURSES]];
+  NETS.forEach(net => {
+    Object.entries(state.nets[net]?.g12||{}).forEach(([g12,gd])=>{
+      Object.entries(gd?.c144||{}).forEach(([c144,d144])=>{
+        Object.entries(d144?.c1728||{}).forEach(([c1728,d1728])=>{
+          d1728.members.forEach(m=>{
+            const row = [net+'네트', g12, c144, c1728, m.name, ATT_LBL[m.att[dk]]||'미체크'];
+        COURSES.forEach(c => row.push(m.courses[c]?'이수':'미이수'));
+            rows.push(row);
+          });
+        });
+      });
+    });
+  });
+  download('\uFEFF' + rows.map(r=>r.map(v=>`"${v}"`).join(',')).join('\n'),
+    '열방교회_출석부_' + getDateKey() + '.csv', 'text/csv;charset=utf-8');
+  showToast('📊 CSV 내보내기 완료');
+};
+
+function download(content, filename, type) {
+  const url = URL.createObjectURL(new Blob([content],{type}));
+  const a = document.createElement('a');
+  a.href=url; a.download=filename; a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ── 초기화 ────────────────────────────────────────────
+function initState() {
+  NETS.forEach(n => {
+    state.nets[n] = {g12:{}, members:[]};
+  });
+}
+
+// 4단계 구조 헬퍼
+function getG12List(net) { return Object.keys(state.nets[net]?.g12||{}); }
+function get144List(net,g12) { return Object.keys(state.nets[net]?.g12[g12]?.c144||{}); }
+function get1728List(net,g12,c144) { return Object.keys(state.nets[net]?.g12[g12]?.c144[c144]?.c1728||{}); }
+function getMembers(net,g12,c144,c1728) { return state.nets[net]?.g12[g12]?.c144[c144]?.c1728[c1728]?.members||[]; }
+function getAllMembers4() {
+  const all=[];
+  NETS.forEach(net=>{
+    // 네트 직속 멤버
+    (state.nets[net]?.members||[]).forEach(m=>all.push({net,g12:'',c144:'',c1728:'',m}));
+    Object.entries(state.nets[net]?.g12||{}).forEach(([g12,gd])=>{
+      // G12 직속 멤버
+      (gd?.members||[]).forEach(m=>all.push({net,g12,c144:'',c1728:'',m}));
+      Object.entries(gd?.c144||{}).forEach(([c144,d144])=>{
+        // 144셀 직속 멤버
+        (d144?.members||[]).forEach(m=>all.push({net,g12,c144,c1728:'',m}));
+        Object.entries(d144?.c1728||{}).forEach(([c1728,d1728])=>{
+          (d1728?.members||[]).forEach(m=>all.push({net,g12,c144,c1728,m}));
+        });
+      });
+    });
+  });
+  return all;
+}
+
+function makeMember(name, isNew=false, newDate='') {
+  const courses = {};
+  COURSES.forEach(c => courses[c]=false);
+  if(isNew) courses['새신자'] = true;
+  const m = {id: Date.now()+Math.random(), name, att:{}, courses};
+  if(isNew && newDate) m.newDate = newDate;
+  return m;
+}
+
+// att 값 읽기: 미설정이면 기본값 'abs' 반환
+function getAtt(m, dk) {
+  return m.att[dk] !== undefined ? m.att[dk] : 'abs';
+}
+
+// att 값 설정: 같은 버튼 재클릭 시 취소 없이 유지 (결석이 기본이므로 null 없음)
+function setAttVal(m, dk, status) {
+  // 이미 선택된 값을 다시 누르면 결석(기본값)으로 되돌림
+  m.att[dk] = m.att[dk] === status ? 'abs' : status;
+}
+
+function getCellDateKey() {
+  // 셀모임 날짜 드롭다운에서 선택된 날짜 사용
+  if(cellDateKey) return 'cell-'+cellDateKey;
+  // 폴백: 현재 주일 기준 전주 토요일
+  const {y,m,d} = currentDate;
+  const prev = new Date(y,m-1,d);
+  prev.setDate(prev.getDate()-1); // 전날(토요일)
+  const py=prev.getFullYear(), pm=String(prev.getMonth()+1).padStart(2,'0'), pd=String(prev.getDate()).padStart(2,'0');
+  return 'cell-'+py+'-'+pm+'-'+pd;
+}
+
+function getDateKey() {
+  const {y,m,d}=currentDate;
+  return `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+}
+
+// ── 날짜 / 탭 ─────────────────────────────────────────
+window.setDate = function(silent) {
+  const y=currentDate.y, m=currentDate.m, d=currentDate.d;
+  const days=['일','월','화','수','목','금','토'];
+  const dowIdx=new Date(y,m-1,d).getDay();
+  const dow=days[dowIdx];
+  const dowColor=dowIdx===0?'#A32D2D':dowIdx===6?'#185FA5':'var(--text)';
+  document.getElementById('curDate').innerHTML=
+    `${y}년 ${m}월 ${d}일 <span style="color:${dowColor};">(${dow}요일)</span>`;
+  // 날짜 변경 시 현재 활성 탭 즉시 반영
+  const _at = document.querySelector('.tab.active');
+  const _t = _at?.getAttribute('onclick')?.match(/showTab\('(\w+)'\)/)?.[1] || 'dash';
+  if(_t === 'dash') { initDashControls(); renderDash(); }
+  else if(_t === 'sunday') renderSunday();
+  else if(_t === 'cell') renderCellAtt();
+  
+  else renderDash();
+  if(!silent) markDirty();
+};
+
+// 현재 활성 탭 즉시 렌더링
+function renderAtt() {
+  const _at = document.querySelector('.tab.active');
+  const _t = _at?.getAttribute('onclick')?.match(/showTab\('(\w+)'\)/)?.[1] || 'dash';
+  if(_t === 'sunday') renderSunday();
+  else if(_t === 'cell') renderCellAtt();
+  
+  else if(_t === 'dash') { renderDash(); renderDashMembers(); }
+  renderDash(); // 대시보드 항상 최신 유지
+}
+
+window.showTab = function(t) {
+  document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelector(`.tab[onclick="showTab('${t}')"]`).classList.add('active');
+  document.getElementById('sec-'+t).classList.add('active');
+  if(t==='dash') { initDashControls(); renderDash(); }
+  if(t==='sunday') { populateSundayFilters(); renderSunday(); }
+  if(t==='cell') { populateCellFilters(); renderCellAtt(); }
+  if(t==='manage') renderManage();
+  
+};
+
+// ── 필터 ─────────────────────────────────────────────
+function populateFilters() {
+  ['manageNet','newMemberNet','dashFilterNet'].forEach(id => {
+    const el = document.getElementById(id); if(!el) return;
+    const keepAll = id==='dashFilterNet';
+    const prevVal = el.value;
+    el.innerHTML = keepAll ? '<option value="">전체 네트</option>' : '<option value="">네트 선택</option>';
+    NETS.forEach(n => el.innerHTML += `<option value="${n}">${n}네트</option>`);
+    if (prevVal && el.querySelector(`option[value="${prevVal}"]`)) {
+      el.value = prevVal;
+    }
+  });
+  updateCellSelect();
+  // 출석이력 탭이 열려있으면 셀 목록도 갱신
+  
+}
+
+function populateSundayFilters() {
+  const el = document.getElementById('sundayFilterNet'); if(!el) return;
+  const prev = el.value;
+  el.innerHTML = '<option value="">전체 네트</option>';
+  NETS.forEach(n => el.innerHTML += `<option value="${n}">${n}네트</option>`);
+  if(prev && el.querySelector(`option[value="${prev}"]`)) el.value = prev;
+}
+
+function populateCellFilters() {
+  const el = document.getElementById('cellFilterNet'); if(!el) return;
+  const prev = el.value;
+  el.innerHTML = '<option value="">전체 네트</option>';
+  NETS.forEach(n => el.innerHTML += `<option value="${n}">${n}네트</option>`);
+  if(prev && el.querySelector(`option[value="${prev}"]`)) el.value = prev;
+}
+
+window.updateCellSelect = function(syncManageNet) {
+  // 4단계 구조에서는 updateNewMemberSelects로 대체
+  const nn = document.getElementById('newMemberNet');
+  if(!nn) return;
+  if(syncManageNet) {
+    const mn = document.getElementById('manageNet');
+    if(mn && nn.value) { mn.value = nn.value; renderManage(); }
+  }
+  updateNewMemberSelects();
+};
+
+
+function makeSundayMemberCard(net, g12, c144, cell, m, dk, search) {
+  return `<div class="member-card">
+    <div class="member-name">${m.name}</div>
+    <div class="att-btns">${ATT.map(s=>`<button class="att-btn ${getAtt(m,dk)===s?s:''}" onclick="setSundayAtt('${net}','${g12}','${c144}','${cell}','${m.id}','${s}')">${ATT_LBL[s]}</button>`).join('')}</div>
+    <div style="font-size:11px;color:var(--text2);margin-bottom:3px;">교육과정 이수:</div>
+    <div class="course-chips">${COURSES.map((c,i)=>`<span class="course-chip ${m.courses[c]?'done':''}" onclick="toggleCourse('${net}','${g12}','${c144}','${cell}','${m.id}','${c}')">${COURSE_SHORT[i]}</span>`).join('')}</div>
+  </div>`;
+}
+
+function makeCellMemberCard(net, g12, c144, cell, m, dk) {
+  return `<div class="member-card">
+    <div class="member-name">${m.name}</div>
+    <div class="att-btns">${ATT.map(s=>`<button class="att-btn ${getAtt(m,dk)===s?s:''}" onclick="setCellAtt('${net}','${g12}','${c144}','${cell}','${m.id}','${s}')">${ATT_LBL[s]}</button>`).join('')}</div>
+  </div>`;
+}
+
+function attSummary(members, dk) {
+  const attC = members.filter(m=>(m.att[dk]!==undefined?m.att[dk]:'abs')==='att').length;
+  const pct = members.length ? Math.round(attC/members.length*100) : 0;
+  const color = pct>=80?'#3B6D11':pct>=50?'#854F0B':'#A32D2D';
+  return {attC, pct, color};
+}
+
+// ── 주일출석 렌더 (4단계 계층) ───────────────────────────
+function renderSunday() {
+  const search=document.getElementById('sundaySearch')?.value.toLowerCase()||'';
+  const filterNet=document.getElementById('sundayFilterNet')?.value||'';
+  const dk=getDateKey();
+  let html='';
+
+  (filterNet?[filterNet]:NETS).forEach(net=>{
+    if(!state.nets[net]) return;
+
+    // 이 네트의 전체 멤버 집계
+    const netDirect=(state.nets[net]?.members||[]).filter(m=>!search||m.name.includes(search));
+    const g12Data=state.nets[net]?.g12||{};
+    let netTotal=netDirect.length;
+    let netAttC=attSummary(netDirect,dk).attC;
+    Object.values(g12Data).forEach(gd=>{
+      const all=[...(gd?.members||[]),...Object.values(gd?.c144||{}).flatMap(d144=>[...(d144?.members||[]),...Object.values(d144?.c1728||{}).flatMap(d1728=>d1728?.members||[])])];
+      netTotal+=all.filter(m=>!search||m.name.includes(search)).length;
+      netAttC+=all.filter(m=>(!search||m.name.includes(search))&&(m.att[dk]!==undefined?m.att[dk]:'abs')==='att').length;
+    });
+    if(!netTotal) return;
+
+    const netPct=Math.round(netAttC/netTotal*100);
+    const netColor=netPct>=80?'#3B6D11':netPct>=50?'#854F0B':'#A32D2D';
+    const netOpen=search?true:(sundayNetOpen[net]===true);
+
+    let netInner='';
+    if(netOpen) {
+      // 네트 직속 멤버
+      if(netDirect.length) {
+        const sorted=netDirect.slice().sort((a,b)=>a.name.localeCompare(b.name,'ko'));
+        const sum=attSummary(netDirect,dk);
+        netInner+=`<div style="margin-bottom:8px;">
+          <div style="font-size:12px;font-weight:600;padding:5px 8px;background:var(--bg2);border-radius:var(--radius);margin-bottom:6px;display:flex;align-items:center;gap:6px;">
+            📌 네트 직속 <span style="font-size:11px;color:var(--text2);">${netDirect.length}명</span>
+            <span style="margin-left:auto;font-size:11px;font-weight:600;color:${attSummary(netDirect,dk).color};">출석 ${sum.attC}/${netDirect.length}</span>
+          </div>
+          <div class="member-grid">${sorted.map(m=>makeSundayMemberCard(net,'','','(네트직속)',m,dk,search)).join('')}</div>
+        </div>`;
+      }
+
+      // G12 단계
+      Object.entries(g12Data).forEach(([g12name,gd])=>{
+        const g12Direct=(gd?.members||[]).filter(m=>!search||m.name.includes(search));
+        const c144Data=gd?.c144||{};
+        let g12Total=g12Direct.length;
+        let g12AttC=attSummary(g12Direct,dk).attC;
+        Object.values(c144Data).forEach(d144=>{
+          const all=[...(d144?.members||[]),...Object.values(d144?.c1728||{}).flatMap(d1728=>d1728?.members||[])];
+          g12Total+=all.filter(m=>!search||m.name.includes(search)).length;
+          g12AttC+=all.filter(m=>(!search||m.name.includes(search))&&(m.att[dk]!==undefined?m.att[dk]:'abs')==='att').length;
+        });
+        if(!g12Total) return;
+        const g12Pct=Math.round(g12AttC/g12Total*100);
+        const g12Color=g12Pct>=80?'#3B6D11':g12Pct>=50?'#854F0B':'#A32D2D';
+        const g12Key=net+'_'+g12name;
+        const g12Open=search?true:(sundayG12Open[g12Key]===true);
+
+        let g12Inner='';
+        if(g12Open) {
+          // G12 직속
+          if(g12Direct.length) {
+            const sorted=g12Direct.slice().sort((a,b)=>a.name.localeCompare(b.name,'ko'));
+            const sum=attSummary(g12Direct,dk);
+            g12Inner+=`<div style="margin-bottom:6px;padding-left:8px;">
+              <div style="font-size:11px;font-weight:600;padding:4px 8px;background:var(--bg3);border-radius:var(--radius);margin-bottom:4px;display:flex;align-items:center;gap:6px;">
+                📌 G12 직속 <span style="font-size:11px;color:var(--text2);">${g12Direct.length}명</span>
+                <span style="margin-left:auto;font-size:11px;color:${sum.color};">출석 ${sum.attC}/${g12Direct.length}</span>
+              </div>
+              <div class="member-grid">${sorted.map(m=>makeSundayMemberCard(net,g12name,'','(G12직속)',m,dk,search)).join('')}</div>
+            </div>`;
+          }
+
+          // 144셀 단계
+          Object.entries(c144Data).forEach(([c144name,d144])=>{
+            const d144Direct=(d144?.members||[]).filter(m=>!search||m.name.includes(search));
+            const c1728Data=d144?.c1728||{};
+            let c144Total=d144Direct.length;
+            let c144AttC=attSummary(d144Direct,dk).attC;
+            Object.values(c1728Data).forEach(d1728=>{
+              const all=(d1728?.members||[]).filter(m=>!search||m.name.includes(search));
+              c144Total+=all.length;
+              c144AttC+=all.filter(m=>(m.att[dk]!==undefined?m.att[dk]:'abs')==='att').length;
+            });
+            if(!c144Total) return;
+            const c144Pct=Math.round(c144AttC/c144Total*100);
+            const c144Color=c144Pct>=80?'#3B6D11':c144Pct>=50?'#854F0B':'#A32D2D';
+            const c144Key=net+'_'+g12name+'_'+c144name;
+            const c144Open=search?true:(sunday144Open[c144Key]===true);
+
+            let c144Inner='';
+            if(c144Open) {
+              // 144셀 직속
+              if(d144Direct.length) {
+                const sorted=d144Direct.slice().sort((a,b)=>a.name.localeCompare(b.name,'ko'));
+                const sum=attSummary(d144Direct,dk);
+                c144Inner+=`<div style="margin-bottom:4px;padding-left:8px;">
+                  <div style="font-size:11px;color:var(--text2);padding:3px 6px;">📌 144셀 직속 (${sum.attC}/${d144Direct.length})</div>
+                  <div class="member-grid">${sorted.map(m=>makeSundayMemberCard(net,g12name,c144name,'(144셀직속)',m,dk,search)).join('')}</div>
+                </div>`;
+              }
+              // 1728셀
+              Object.entries(c1728Data).forEach(([c1728name,d1728])=>{
+                const members=(d1728?.members||[]).filter(m=>!search||m.name.includes(search)).sort((a,b)=>a.name.localeCompare(b.name,'ko'));
+                if(!members.length) return;
+                const sum=attSummary(members,dk);
+                c144Inner+=`<div style="margin-bottom:4px;padding-left:8px;">
+                  <div style="font-size:11px;font-weight:600;padding:3px 6px;color:var(--text2);">1728셀 · ${c1728name} <span style="color:${sum.color};">(출석 ${sum.attC}/${members.length})</span></div>
+                  <div class="member-grid">${members.map(m=>makeSundayMemberCard(net,g12name,c144name,c1728name,m,dk,search)).join('')}</div>
+                </div>`;
+              });
+            }
+
+            g12Inner+=`<div style="margin-bottom:6px;padding-left:8px;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;">
+              <div data-toggle-s144="${c144Key}" style="padding:6px 10px;cursor:pointer;display:flex;align-items:center;gap:6px;background:var(--bg2);user-select:none;">
+                <span style="font-size:11px;">${c144Open?'▼':'▶'}</span>
+                <span style="font-size:12px;font-weight:600;color:var(--text2);">144셀</span>
+                <span style="font-size:12px;font-weight:600;">${c144name}</span>
+                <span class="net-badge" style="font-size:10px;">${c144Total}명</span>
+                <span style="margin-left:auto;font-size:11px;font-weight:600;color:${c144Color};">출석 ${c144AttC}/${c144Total}</span>
+              </div>
+              ${c144Open?`<div style="padding:6px 8px;">${c144Inner}</div>`:''}
+            </div>`;
+          });
+        }
+
+        netInner+=`<div style="margin-bottom:8px;border:1px solid var(--border2);border-radius:var(--radius);overflow:hidden;">
+          <div data-toggle-sg12="${g12Key}" style="padding:8px 12px;cursor:pointer;display:flex;align-items:center;gap:8px;background:var(--bg2);user-select:none;">
+            <span style="font-size:12px;">${g12Open?'▼':'▶'}</span>
+            <span style="font-size:11px;font-weight:600;color:var(--primary);">G12</span>
+            <span style="font-size:13px;font-weight:600;">${g12name}</span>
+            <span class="net-badge">${g12Total}명</span>
+            <span style="margin-left:auto;font-size:12px;font-weight:600;color:${g12Color};">출석 ${g12AttC}/${g12Total}</span>
+          </div>
+          ${g12Open?`<div style="padding:6px 10px;">${g12Inner}</div>`:''}
+        </div>`;
+      });
+    }
+
+    html+=`<div style="margin-bottom:8px;border:2px solid var(--border);border-radius:var(--radius);overflow:hidden;">
+      <div data-toggle-sunday="${net}" style="padding:10px 14px;cursor:pointer;display:flex;align-items:center;gap:8px;background:var(--bg2);user-select:none;">
+        <span style="font-size:13px;">${netOpen?'▼':'▶'}</span>
+        <span style="font-size:14px;font-weight:600;">${net}네트</span>
+        <span class="net-badge">${netTotal}명</span>
+        <span style="margin-left:auto;font-size:12px;font-weight:600;color:${netColor};">출석 ${netAttC}/${netTotal} (${netPct}%)</span>
+      </div>
+      ${netOpen?`<div style="padding:8px 12px;">${netInner}</div>`:''}
+    </div>`;
+  });
+
+  document.getElementById('sundayList').innerHTML=html||'<div class="card" style="text-align:center;color:var(--text2);padding:2rem;">검색 결과가 없습니다.</div>';
+}
+
+window.setSundayAtt = function(net,g12,c144,c1728,id,status) {
+  const dk=getDateKey();
+  // 모든 레벨에서 멤버 찾기
+  let m = null;
+  if(!g12) { m=(state.nets[net]?.members||[]).find(x=>x.id==id); }
+  else if(!c144) { m=(state.nets[net]?.g12[g12]?.members||[]).find(x=>x.id==id); }
+  else if(!c1728||c1728==='(144셀직속)') { m=(state.nets[net]?.g12[g12]?.c144[c144]?.members||[]).find(x=>x.id==id); }
+  else { m=(state.nets[net]?.g12[g12]?.c144[c144]?.c1728[c1728]?.members||[]).find(x=>x.id==id); }
+  if(!m) return;
+  setAttVal(m, dk, status);
+  renderSunday();
+  saveToCloud();
+};
+
+window.markAllSunday = function(status) {
+  const dk=getDateKey();
+  const filterNet=document.getElementById('sundayFilterNet')?.value||'';
+  (filterNet?[filterNet]:NETS).forEach(net=>{
+    (state.nets[net]?.members||[]).forEach(m=>m.att[dk]=status);
+    Object.values(state.nets[net]?.g12||{}).forEach(gd=>{
+      (gd?.members||[]).forEach(m=>m.att[dk]=status);
+      Object.values(gd?.c144||{}).forEach(d144=>{
+        (d144?.members||[]).forEach(m=>m.att[dk]=status);
+        Object.values(d144?.c1728||{}).forEach(d1728=>
+          d1728.members.forEach(m=>m.att[dk]=status)
+        );
+      });
+    });
+  });
+  renderSunday(); saveToCloud();
+};
+
+// ── 셀출석 렌더 (4단계 계층) ─────────────────────────────
+function renderCellAtt() {
+  const search=document.getElementById('cellSearch')?.value.toLowerCase()||'';
+  const filterNet=document.getElementById('cellFilterNet')?.value||'';
+  const dk=getCellDateKey();
+  // 셀모임 날짜 레이블 업데이트
+  updateCellDateLabel();
+  let html='';
+
+  (filterNet?[filterNet]:NETS).forEach(net=>{
+    if(!state.nets[net]) return;
+
+    const netDirect=(state.nets[net]?.members||[]).filter(m=>!search||m.name.includes(search));
+    const g12Data=state.nets[net]?.g12||{};
+    let netTotal=netDirect.length;
+    let netAttC=attSummary(netDirect,dk).attC;
+    Object.values(g12Data).forEach(gd=>{
+      const all=[...(gd?.members||[]),...Object.values(gd?.c144||{}).flatMap(d144=>[...(d144?.members||[]),...Object.values(d144?.c1728||{}).flatMap(d1728=>d1728?.members||[])])];
+      netTotal+=all.filter(m=>!search||m.name.includes(search)).length;
+      netAttC+=all.filter(m=>(!search||m.name.includes(search))&&(m.att[dk]!==undefined?m.att[dk]:'abs')==='att').length;
+    });
+    if(!netTotal) return;
+
+    const netPct=Math.round(netAttC/netTotal*100);
+    const netColor=netPct>=80?'#3B6D11':netPct>=50?'#854F0B':'#A32D2D';
+    const netOpen=search?true:(cellNetOpen[net]===true);
+
+    let netInner='';
+    if(netOpen){
+      // 네트 직속
+      if(netDirect.length){
+        const sorted=netDirect.slice().sort((a,b)=>a.name.localeCompare(b.name,'ko'));
+        const sum=attSummary(netDirect,dk);
+        netInner+=`<div style="margin-bottom:8px;">
+          <div style="font-size:12px;font-weight:600;padding:5px 8px;background:var(--bg2);border-radius:var(--radius);margin-bottom:6px;display:flex;align-items:center;gap:6px;">
+            📌 네트 직속 <span style="font-size:11px;color:var(--text2);">${netDirect.length}명</span>
+            <span style="margin-left:auto;font-size:11px;font-weight:600;color:${sum.color};">출석 ${sum.attC}/${netDirect.length}</span>
+          </div>
+          <div class="member-grid">${sorted.map(m=>makeCellMemberCard(net,'','','(네트직속)',m,dk)).join('')}</div>
+        </div>`;
+      }
+
+      // G12
+      Object.entries(g12Data).forEach(([g12name,gd])=>{
+        const g12Direct=(gd?.members||[]).filter(m=>!search||m.name.includes(search));
+        const c144Data=gd?.c144||{};
+        let g12Total=g12Direct.length;
+        let g12AttC=attSummary(g12Direct,dk).attC;
+        Object.values(c144Data).forEach(d144=>{
+          const all=[...(d144?.members||[]),...Object.values(d144?.c1728||{}).flatMap(d1728=>d1728?.members||[])];
+          g12Total+=all.filter(m=>!search||m.name.includes(search)).length;
+          g12AttC+=all.filter(m=>(!search||m.name.includes(search))&&(m.att[dk]!==undefined?m.att[dk]:'abs')==='att').length;
+        });
+        if(!g12Total) return;
+        const g12Pct=Math.round(g12AttC/g12Total*100);
+        const g12Color=g12Pct>=80?'#3B6D11':g12Pct>=50?'#854F0B':'#A32D2D';
+        const g12Key=net+'_'+g12name;
+        const g12Open=search?true:(cellG12Open[g12Key]===true);
+
+        let g12Inner='';
+        if(g12Open){
+          // G12 직속
+          if(g12Direct.length){
+            const sorted=g12Direct.slice().sort((a,b)=>a.name.localeCompare(b.name,'ko'));
+            const sum=attSummary(g12Direct,dk);
+            g12Inner+=`<div style="margin-bottom:6px;padding-left:8px;">
+              <div style="font-size:11px;font-weight:600;padding:4px 8px;background:var(--bg3);border-radius:var(--radius);margin-bottom:4px;display:flex;align-items:center;gap:6px;">
+                📌 G12 직속 <span style="color:var(--text2);">${g12Direct.length}명</span>
+                <span style="margin-left:auto;color:${sum.color};">출석 ${sum.attC}/${g12Direct.length}</span>
+              </div>
+              <div class="member-grid">${sorted.map(m=>makeCellMemberCard(net,g12name,'','(G12직속)',m,dk)).join('')}</div>
+            </div>`;
+          }
+
+          // 144셀
+          Object.entries(c144Data).forEach(([c144name,d144])=>{
+            const d144Direct=(d144?.members||[]).filter(m=>!search||m.name.includes(search));
+            const c1728Data=d144?.c1728||{};
+            let c144Total=d144Direct.length;
+            let c144AttC=attSummary(d144Direct,dk).attC;
+            Object.values(c1728Data).forEach(d1728=>{
+              const all=(d1728?.members||[]).filter(m=>!search||m.name.includes(search));
+              c144Total+=all.length;
+              c144AttC+=all.filter(m=>(m.att[dk]!==undefined?m.att[dk]:'abs')==='att').length;
+            });
+            if(!c144Total) return;
+            const c144Pct=Math.round(c144AttC/c144Total*100);
+            const c144Color=c144Pct>=80?'#3B6D11':c144Pct>=50?'#854F0B':'#A32D2D';
+            const c144Key=net+'_'+g12name+'_'+c144name;
+            const c144Open=search?true:(cell144Open[c144Key]===true);
+
+            let c144Inner='';
+            if(c144Open){
+              if(d144Direct.length){
+                const sorted=d144Direct.slice().sort((a,b)=>a.name.localeCompare(b.name,'ko'));
+                const sum=attSummary(d144Direct,dk);
+                c144Inner+=`<div style="margin-bottom:4px;padding-left:8px;">
+                  <div style="font-size:11px;color:var(--text2);padding:3px 6px;">📌 144셀 직속 (${sum.attC}/${d144Direct.length})</div>
+                  <div class="member-grid">${sorted.map(m=>makeCellMemberCard(net,g12name,c144name,'(144셀직속)',m,dk)).join('')}</div>
+                </div>`;
+              }
+              Object.entries(c1728Data).forEach(([c1728name,d1728])=>{
+                const members=(d1728?.members||[]).filter(m=>!search||m.name.includes(search)).sort((a,b)=>a.name.localeCompare(b.name,'ko'));
+                if(!members.length) return;
+                const sum=attSummary(members,dk);
+                c144Inner+=`<div style="margin-bottom:4px;padding-left:8px;">
+                  <div style="font-size:11px;font-weight:600;padding:3px 6px;color:var(--text2);">1728셀 · ${c1728name} <span style="color:${sum.color};">(출석 ${sum.attC}/${members.length})</span></div>
+                  <div class="member-grid">${members.map(m=>makeCellMemberCard(net,g12name,c144name,c1728name,m,dk)).join('')}</div>
+                </div>`;
+              });
+            }
+
+            g12Inner+=`<div style="margin-bottom:6px;padding-left:8px;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;">
+              <div data-toggle-c144="${c144Key}" style="padding:6px 10px;cursor:pointer;display:flex;align-items:center;gap:6px;background:var(--bg2);user-select:none;">
+                <span style="font-size:11px;">${c144Open?'▼':'▶'}</span>
+                <span style="font-size:12px;font-weight:600;color:var(--text2);">144셀</span>
+                <span style="font-size:12px;font-weight:600;">${c144name}</span>
+                <span class="net-badge" style="font-size:10px;">${c144Total}명</span>
+                <span style="margin-left:auto;font-size:11px;font-weight:600;color:${c144Color};">출석 ${c144AttC}/${c144Total}</span>
+              </div>
+              ${c144Open?`<div style="padding:6px 8px;">${c144Inner}</div>`:''}
+            </div>`;
+          });
+        }
+
+        netInner+=`<div style="margin-bottom:8px;border:1px solid var(--border2);border-radius:var(--radius);overflow:hidden;">
+          <div data-toggle-cg12="${g12Key}" style="padding:8px 12px;cursor:pointer;display:flex;align-items:center;gap:8px;background:var(--bg2);user-select:none;">
+            <span style="font-size:12px;">${g12Open?'▼':'▶'}</span>
+            <span style="font-size:11px;font-weight:600;color:var(--primary);">G12</span>
+            <span style="font-size:13px;font-weight:600;">${g12name}</span>
+            <span class="net-badge">${g12Total}명</span>
+            <span style="margin-left:auto;font-size:12px;font-weight:600;color:${g12Color};">출석 ${g12AttC}/${g12Total}</span>
+          </div>
+          ${g12Open?`<div style="padding:6px 10px;">${g12Inner}</div>`:''}
+        </div>`;
+      });
+    }
+
+    html+=`<div style="margin-bottom:8px;border:2px solid var(--border);border-radius:var(--radius);overflow:hidden;">
+      <div data-toggle-cell="${net}" style="padding:10px 14px;cursor:pointer;display:flex;align-items:center;gap:8px;background:var(--bg2);user-select:none;">
+        <span style="font-size:13px;">${netOpen?'▼':'▶'}</span>
+        <span style="font-size:14px;font-weight:600;">${net}네트</span>
+        <span class="net-badge">${netTotal}명</span>
+        <span style="margin-left:auto;font-size:12px;font-weight:600;color:${netColor};">출석 ${netAttC}/${netTotal} (${netPct}%)</span>
+      </div>
+      ${netOpen?`<div style="padding:8px 12px;">${netInner}</div>`:''}
+    </div>`;
+  });
+
+  document.getElementById('cellAttList').innerHTML=html||'<div class="card" style="text-align:center;color:var(--text2);padding:2rem;">검색 결과가 없습니다.</div>';
+}
+
+window.setCellAtt = function(net,g12,c144,c1728,id,status) {
+  const dk=getCellDateKey();
+  let m = null;
+  if(!g12) { m=(state.nets[net]?.members||[]).find(x=>x.id==id); }
+  else if(!c144) { m=(state.nets[net]?.g12[g12]?.members||[]).find(x=>x.id==id); }
+  else if(!c1728||c1728==='(144셀직속)') { m=(state.nets[net]?.g12[g12]?.c144[c144]?.members||[]).find(x=>x.id==id); }
+  else { m=(state.nets[net]?.g12[g12]?.c144[c144]?.c1728[c1728]?.members||[]).find(x=>x.id==id); }
+  if(!m) return;
+  setAttVal(m, dk, status);
+  renderCellAtt();
+  saveToCloud();
+};
+
+window.markAllCell = function(status) {
+  const dk=getCellDateKey();
+  const filterNet=document.getElementById('cellFilterNet')?.value||'';
+  (filterNet?[filterNet]:NETS).forEach(net=>{
+    (state.nets[net]?.members||[]).forEach(m=>m.att[dk]=status);
+    Object.values(state.nets[net]?.g12||{}).forEach(gd=>{
+      (gd?.members||[]).forEach(m=>m.att[dk]=status);
+      Object.values(gd?.c144||{}).forEach(d144=>{
+        (d144?.members||[]).forEach(m=>m.att[dk]=status);
+        Object.values(d144?.c1728||{}).forEach(d1728=>d1728.members.forEach(m=>m.att[dk]=status));
+      });
+    });
+  });
+  renderCellAtt(); saveToCloud();
+};
+
+
+
+window.toggleCourse = function(net,g12,c144,c1728,id,course) {
+  let m = null;
+  if(!g12) { m=(state.nets[net]?.members||[]).find(x=>x.id==id); }
+  else if(!c144) { m=(state.nets[net]?.g12[g12]?.members||[]).find(x=>x.id==id); }
+  else if(!c1728||c1728==='(144셀직속)') { m=(state.nets[net]?.g12[g12]?.c144[c144]?.members||[]).find(x=>x.id==id); }
+  else { m=(state.nets[net]?.g12[g12]?.c144[c144]?.c1728[c1728]?.members||[]).find(x=>x.id==id); }
+  if(!m) return;
+  m.courses[course]=!m.courses[course];
+  renderSunday(); saveToCloud();
+};
+
+
+
+
+// ── 출석 추이 그래프 ────────────────────────────────────
+let trendChart = null;
+
+// setTrendPeriod 삭제 - dashPeriod와 연동
+
+function getTrendData() {
+  const now = new Date();
+  const curY = now.getFullYear();
+  const allSundays = getSundaysOfYear(curY-1).concat(getSundaysOfYear(curY));
+  const labels = [], sundayData = [], cellData = [], newData = [];
+  const all = getAllMembers4();
+  const startDate = new Date(2026, 3, 19); // 데이터 시작일
+
+  // 대시보드 통계기간과 연동
+  const period = dashPeriod;
+  const y = parseInt(document.getElementById('dashYear')?.value || curY);
+  const m = parseInt(document.getElementById('dashMonth')?.value || now.getMonth()+1);
+  const q = parseInt(document.getElementById('dashQuarter')?.value || Math.ceil((now.getMonth()+1)/3));
+
+  if(period === 'week') {
+    // 주간: 2026-04-19부터 현재까지 모든 주일 표시
+    const recent = allSundays.filter(s => s >= startDate && s <= now);
+    recent.forEach(s => {
+      const dk = dateToKey(s);
+      const prevDay = new Date(s); prevDay.setDate(s.getDate()-1);
+      const cdk = 'cell-'+dateToKey(prevDay);
+      labels.push(`${s.getMonth()+1}/${s.getDate()}`);
+      sundayData.push(all.filter(({m:mem}) => (mem.att[dk]||'abs')==='att').length);
+      cellData.push(all.filter(({m:mem}) => (mem.att[cdk]||'abs')==='att').length);
+      newData.push(all.filter(({m:mem}) => mem.newDate === dk).length);
+    });
+  } else if(period === 'month') {
+    // 월간: 선택된 월의 주일들 표시
+    const monthSundays = allSundays.filter(s =>
+      s.getFullYear()===y && s.getMonth()+1===m && s>=startDate && s<=now
+    );
+    monthSundays.forEach(s => {
+      const dk = dateToKey(s);
+      const prevDay = new Date(s); prevDay.setDate(s.getDate()-1);
+      const cdk = 'cell-'+dateToKey(prevDay);
+      labels.push(`${m}/${s.getDate()}`);
+      sundayData.push(all.filter(({m:mem}) => (mem.att[dk]||'abs')==='att').length);
+      cellData.push(all.filter(({m:mem}) => (mem.att[cdk]||'abs')==='att').length);
+      newData.push(all.filter(({m:mem}) => mem.newDate === dk).length);
+    });
+  } else if(period === 'quarter') {
+    // 분기별: 선택된 분기의 주일들 표시
+    const qSundays = allSundays.filter(s =>
+      s.getFullYear()===y && Math.ceil((s.getMonth()+1)/3)===q && s>=startDate && s<=now
+    );
+    qSundays.forEach(s => {
+      const dk = dateToKey(s);
+      const prevDay = new Date(s); prevDay.setDate(s.getDate()-1);
+      const cdk = 'cell-'+dateToKey(prevDay);
+      labels.push(`${s.getMonth()+1}/${s.getDate()}`);
+      sundayData.push(all.filter(({m:mem}) => (mem.att[dk]||'abs')==='att').length);
+      cellData.push(all.filter(({m:mem}) => (mem.att[cdk]||'abs')==='att').length);
+      newData.push(all.filter(({m:mem}) => mem.newDate === dk).length);
+    });
+  } else {
+    // 연간: 선택된 연도의 주일들 표시
+    const ySundays = allSundays.filter(s =>
+      s.getFullYear()===y && s>=startDate && s<=now
+    );
+    ySundays.forEach(s => {
+      const dk = dateToKey(s);
+      const prevDay = new Date(s); prevDay.setDate(s.getDate()-1);
+      const cdk = 'cell-'+dateToKey(prevDay);
+      labels.push(`${s.getMonth()+1}/${s.getDate()}`);
+      sundayData.push(all.filter(({m:mem}) => (mem.att[dk]||'abs')==='att').length);
+      cellData.push(all.filter(({m:mem}) => (mem.att[cdk]||'abs')==='att').length);
+      newData.push(all.filter(({m:mem}) => mem.newDate === dk).length);
+    });
+  }
+
+  return {labels, sundayData, cellData, newData};
+}
+
+
+function renderTrendChart() {
+  const canvas = document.getElementById('trendCanvas');
+  if(!canvas) return;
+  if(typeof Chart === 'undefined') {
+    setTimeout(renderTrendChart, 300);
+    return;
+  }
+  const ctx = canvas.getContext('2d');
+  const {labels, sundayData, cellData, newData} = getTrendData();
+  const showSunday = document.getElementById('trendShowSunday')?.checked;
+  const showCell = document.getElementById('trendShowCell')?.checked;
+  const showNew = document.getElementById('trendShowNew')?.checked;
+
+  if(trendChart) { trendChart.destroy(); trendChart = null; }
+
+  const datasets = [];
+  if(showSunday) datasets.push({label:'주일출석',data:sundayData,borderColor:'#3B6D11',backgroundColor:'rgba(59,109,17,0.08)',tension:0.3,pointRadius:4,pointHoverRadius:6,fill:true,borderWidth:2});
+  if(showCell)   datasets.push({label:'셀출석',data:cellData,borderColor:'#185FA5',backgroundColor:'rgba(24,95,165,0.08)',tension:0.3,pointRadius:4,pointHoverRadius:6,fill:true,borderWidth:2});
+  if(showNew)    datasets.push({label:'새신자',data:newData,borderColor:'#c8973a',backgroundColor:'rgba(200,151,58,0.08)',tension:0.3,pointRadius:4,pointHoverRadius:6,fill:true,borderWidth:2});
+
+  const isDark = document.documentElement.classList.contains('dark') || window.matchMedia('(prefers-color-scheme:dark)').matches;
+  const textColor = isDark ? '#ccc' : '#555';
+  const gridColor = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)';
+
+  trendChart = new Chart(ctx, {
+    type: 'line',
+    data: {labels, datasets},
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      aspectRatio: 3,
+      plugins: {
+        legend: {labels:{color:textColor,font:{size:12}}},
+        tooltip: {mode:'index',intersect:false}
+      },
+      scales: {
+        x: {ticks:{color:textColor,font:{size:11}},grid:{color:gridColor}},
+        y: {ticks:{color:textColor,font:{size:11}},grid:{color:gridColor},beginAtZero:true}
+      }
+    }
+  });
+}
+
+
+// ── 대시보드 ─────────────────────────────────────────
+let dashPeriod = 'week';
+
+function getAllMembers() {
+  return getAllMembers4().map(({net,g12,c144,c1728,m})=>({net, cell:c1728, m}));
+}
+
+// 날짜를 YYYY-M-D 키로 변환
+function dateToKey(date) {
+  return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
+}
+
+// 해당 날짜가 속한 주의 일요일 목록 반환 (해당 연도 전체 일요일)
+function getSundaysOfYear(y) {
+  const sundays = [];
+  if (!y || y < 2000 || y > 2100) return sundays;
+  const d = new Date(y, 0, 1);
+  let safety = 0;
+  while (d.getDay() !== 0 && safety++ < 7) d.setDate(d.getDate()+1);
+  safety = 0;
+  while (d.getFullYear() === y && safety++ < 60) {
+    sundays.push(new Date(d));
+    d.setDate(d.getDate()+7);
+  }
+  return sundays;
+}
+
+// 주 번호 계산 (연도 내 몇 번째 일요일인지)
+function getWeekIndex(y, m, d) {
+  const sundays = getSundaysOfYear(y);
+  return sundays.findIndex(s => s.getFullYear()===y && s.getMonth()+1===m && s.getDate()===d);
+}
+
+function initDashControls() {
+  const now = new Date();
+  const yr = document.getElementById('dashYear');
+  const mo = document.getElementById('dashMonth');
+  const qt = document.getElementById('dashQuarter');
+  const wk = document.getElementById('dashWeek');
+  if (!yr || !mo || !qt || !wk) return;
+
+  // 연도 옵션: 최초 1회만 생성
+  if (!yr.options.length) {
+    for (let y = now.getFullYear(); y >= now.getFullYear()-4; y--)
+      yr.innerHTML += `<option value="${y}">${y}년</option>`;
+    yr.value = currentDate.y;
+  }
+  // 월 옵션: 최초 1회만 생성
+  if (!mo.options.length) {
+    for (let m=1;m<=12;m++)
+      mo.innerHTML += `<option value="${m}">${m}월</option>`;
+    mo.value = currentDate.m;
+  }
+  // 분기 기본값: 항상 현재 분기로 설정
+  const curQ = Math.ceil(currentDate.m/3);
+  qt.value = String(curQ);
+
+  // 주간 셀렉트: 연도가 바뀌었거나 처음 생성할 때만 재생성
+  const wkSelY = parseInt(yr.value || currentDate.y);
+  if (!wk.options.length || wk.dataset.year !== String(wkSelY)) {
+    wk.dataset.year = String(wkSelY);
+    const selY = parseInt(yr.value || currentDate.y);
+    const sundays = getSundaysOfYear(selY);
+    wk.innerHTML = '';
+    sundays.forEach((s, i) => {
+      const label = `${s.getMonth()+1}월 ${s.getDate()}일 (${i+1}주차)`;
+      wk.innerHTML += `<option value="${i}">${label}</option>`;
+    });
+    // 기본값: 오늘 날짜 기준 가장 가까운 이전 주일(또는 오늘이 주일이면 오늘)
+    const today = new Date();
+    const todayDow = today.getDay(); // 0=일,1=월,...,6=토
+    const nearestSunday = new Date(today);
+    nearestSunday.setDate(today.getDate() - todayDow); // 이번 주 일요일
+    // 해당 주일이 sundays 목록에 있는지 찾기
+    const bestIdx = sundays.reduce((best, s, i) => {
+      const sDate = new Date(s.getFullYear(), s.getMonth(), s.getDate());
+      const nDate = new Date(nearestSunday.getFullYear(), nearestSunday.getMonth(), nearestSunday.getDate());
+      if(sDate <= nDate) return i;
+      return best;
+    }, 0);
+    wk.value = String(bestIdx);
+  }
+
+  // 표시 상태 동기화만 (값은 절대 변경 안 함)
+  yr.style.display = dashPeriod==='week' ? 'none' : '';
+  mo.style.display = dashPeriod==='month'   ? '' : 'none';
+  qt.style.display = dashPeriod==='quarter' ? '' : 'none';
+  wk.style.display = dashPeriod==='week'    ? '' : 'none';
+}
+
+window.setPeriod = function(p) {
+  dashPeriod = p;
+  document.querySelectorAll('.period-btn').forEach(b=>b.classList.remove('active-period'));
+  const btnMap = {week:'btnWeek', month:'btnMonth', quarter:'btnQuarter', year:'btnYear'};
+  const btn = document.getElementById(btnMap[p]);
+  if(btn) btn.classList.add('active-period');
+  // 표시/숨김 처리
+  const yrEl = document.getElementById('dashYear');
+  const moEl = document.getElementById('dashMonth');
+  const qtEl = document.getElementById('dashQuarter');
+  const wkEl = document.getElementById('dashWeek');
+  if(yrEl) yrEl.style.display = p==='week' ? 'none' : '';
+  if(moEl) moEl.style.display = p==='month'   ? '' : 'none';
+  if(qtEl) qtEl.style.display = p==='quarter' ? '' : 'none';
+  if(wkEl) wkEl.style.display = p==='week'    ? '' : 'none';
+  // wk 옵션이 없으면 생성
+  if(p==='week' && wkEl && !wkEl.options.length) initDashControls();
+  // 분기별 탭 선택 시 현재 분기로 초기화
+  if(p==='quarter' && qtEl) {
+    const nowQ = Math.ceil(currentDate.m/3);
+    qtEl.value = String(nowQ);
+  }
+  renderDash();
+  renderTrendChart();
+};
+
+// 기간에 해당하는 모든 날짜 키 반환
+function getPeriodKeys() {
+  const yrEl = document.getElementById('dashYear');
+  const moEl = document.getElementById('dashMonth');
+  const qtEl = document.getElementById('dashQuarter');
+  const wkEl = document.getElementById('dashWeek');
+  const y = parseInt(yrEl?.value || currentDate.y);
+  const m = parseInt(moEl?.value || currentDate.m);
+  const q = parseInt(qtEl?.value || Math.ceil(currentDate.m/3));
+  const wkIdx = parseInt(wkEl?.value ?? -1);
+
+  // 주간: 선택된 일요일 하루만
+  if (dashPeriod === 'week') {
+    const sundays = getSundaysOfYear(y);
+    const selected = sundays[wkIdx];
+    if (!selected) return [getDateKey()];
+    return [dateToKey(selected)];
+  }
+
+  // 해당 기간의 모든 주일 날짜를 반환 (데이터 유무와 무관)
+  const allSundays = getSundaysOfYear(y);
+  const keys = allSundays
+    .filter(s => {
+      const sm = s.getMonth()+1;
+      if(dashPeriod==='month')   return sm===m;
+      if(dashPeriod==='quarter') return Math.ceil(sm/3)===q;
+      if(dashPeriod==='year')    return true;
+      return false;
+    })
+    .map(s => dateToKey(s));
+  // 현재 날짜가 범위 안이면 포함
+  const curKey = getDateKey();
+  const [cy,cm2] = curKey.split('-').map(Number);
+  const inRange =
+    (dashPeriod==='month'   && cy===y && cm2===m) ||
+    (dashPeriod==='quarter' && cy===y && Math.ceil(cm2/3)===q) ||
+    (dashPeriod==='year'    && cy===y);
+  if(inRange && !keys.includes(curKey)) keys.push(curKey);
+  return keys.sort();
+}
+
+function getCellPeriodKeys(sundayKeys) {
+  // 셀모임 키: 각 주일 기준 전날(토)부터 6일 전(월)까지 어떤 날이든 포함
+  // 단일 주일이면 현재 cellDateKey 사용, 여러 주일이면 각각 전주 토요일 기준
+  if(sundayKeys.length === 1 && cellDateKey) {
+    return ['cell-'+cellDateKey];
+  }
+  return sundayKeys.map(k => {
+    const [y,m,d] = k.split('-').map(Number);
+    const prev = new Date(y,m-1,d);
+    prev.setDate(prev.getDate()-1); // 토요일
+    const py=prev.getFullYear(), pm=String(prev.getMonth()+1).padStart(2,'0'), pd=String(prev.getDate()).padStart(2,'0');
+    return 'cell-'+py+'-'+pm+'-'+pd;
+  });
+}
+
+function aggStats(all, keys) {
+  const total = all.length;
+  if (!keys.length || !total) return {total,attC:0,absC:0,onC:0,pct:0,sessions:0};
+  let attC=0, absC=0, sessions=keys.length;
+  keys.forEach(dk => {
+    all.forEach(({m}) => {
+      const s = m.att[dk] !== undefined ? m.att[dk] : 'abs';
+      if (s==='att') attC++;
+      else absC++;
+    });
+  });
+  const possible = total * sessions;
+  const pct = possible ? Math.round(attC/possible*100) : 0;
+  return {total, attC, absC, onC:0, pct, sessions};
+}
+
+function getPeriodLabel() {
+  const y = parseInt(document.getElementById('dashYear')?.value || currentDate.y);
+  const m = parseInt(document.getElementById('dashMonth')?.value || currentDate.m);
+  const q = parseInt(document.getElementById('dashQuarter')?.value || Math.ceil(currentDate.m/3));
+  const wkIdx = parseInt(document.getElementById('dashWeek')?.value ?? -1);
+  if (dashPeriod==='week') {
+    const sundays = getSundaysOfYear(y);
+    const s = sundays[wkIdx];
+    if (s) return `${y}년 ${s.getMonth()+1}월 ${s.getDate()}일 (${wkIdx+1}주차)`;
+    return `${y}년`;
+  }
+  if (dashPeriod==='month')   return `${y}년 ${m}월`;
+  if (dashPeriod==='quarter') {
+    const qNames = {1:'1분기 (1~3월)',2:'2분기 (4~6월)',3:'3분기 (7~9월)',4:'4분기 (10~12월)'};
+    return `${y}년 ${qNames[q]||q+'분기'}`;
+  }
+  return `${y}년`;
+}
+
+function renderDash() {
+  const keys = getPeriodKeys();
+  const ckeys = getCellPeriodKeys(keys);
+  const all = getAllMembers();
+  const s = aggStats(all, keys);
+  const cs = aggStats(all, ckeys);
+  const label = getPeriodLabel();
+  // 셀출석 날짜 레이블: 현재 주일 기준 전주 날짜
+  // 셀출석 헤더: 주일출석과 동일한 주차로 표시 (실제 날짜는 cellDateKey)
+  const cellLabel = label;
+
+  const isWeek = dashPeriod === 'week';
+  const allM4 = getAllMembers4();
+
+  // 오늘까지 지나간 주일만 분모로 사용
+  // 데이터 시작: 2026-04-19, 오늘까지의 주일만 카운트
+  const today = new Date();
+  const startDate = new Date(2026, 3, 19); // 2026-04-19
+  const pastKeys = keys.filter(dk => {
+    const [ky,km,kd] = dk.split('-').map(Number);
+    const kDate = new Date(ky, km-1, kd);
+    return kDate >= startDate && kDate <= today;
+  });
+  const pastCkeys = ckeys.filter(ck => {
+    const dk = ck.replace('cell-','');
+    const [ky,km,kd] = dk.split('-').map(Number);
+    const kDate = new Date(ky, km-1, kd);
+    return kDate >= startDate && kDate <= today;
+  });
+  const sessions = pastKeys.length || 1;
+
+  document.getElementById('dashPeriodLabel').textContent = isWeek ? `(${label})` : `(${label} · 주일 ${sessions}회)`;
+
+  // 새신자 수
+  const newCount = isWeek
+    ? allM4.filter(({m}) => m.newDate === getDateKey()).length
+    : allM4.filter(({m}) => m.newDate && pastKeys.includes(m.newDate)).length;
+
+  // 오늘까지 지나간 주일별 출석/결석 집계
+  const weeklyAtt     = pastKeys.map(dk => allM4.filter(({m}) => (m.att[dk]||'abs')==='att').length);
+  const weeklyAbs     = pastKeys.map(dk => allM4.filter(({m}) => (m.att[dk]||'abs')==='abs').length);
+  const weeklyCellAtt = pastCkeys.map(ck => allM4.filter(({m}) => (m.att[ck]||'abs')==='att').length);
+  const weeklyCellAbs = pastCkeys.map(ck => allM4.filter(({m}) => (m.att[ck]||'abs')==='abs').length);
+
+  // 분모: 오늘까지 지나간 주일 수 (데이터 없어도 포함)
+  const sunSessCnt  = pastKeys.length  || 1;
+  const cellSessCnt = pastCkeys.length || 1;
+
+  const peakTotal = allM4.length;
+
+  const avgSunAtt  = isWeek ? s.attC  : Math.round(weeklyAtt.reduce((a,b)=>a+b,0)  / sunSessCnt);
+  const avgSunAbs  = isWeek ? s.absC  : Math.round(weeklyAbs.reduce((a,b)=>a+b,0)  / sunSessCnt);
+  const avgSunPct  = isWeek ? s.pct   : (peakTotal ? Math.round(avgSunAtt/peakTotal*100) : 0);
+  const avgCellAtt = isWeek ? cs.attC : Math.round(weeklyCellAtt.reduce((a,b)=>a+b,0) / cellSessCnt);
+  const avgCellAbs = isWeek ? cs.absC : Math.round(weeklyCellAbs.reduce((a,b)=>a+b,0) / cellSessCnt);
+  const avgCellPct = isWeek ? cs.pct  : (peakTotal ? Math.round(avgCellAtt/peakTotal*100) : 0);
+
+  // 요약 카드
+  document.getElementById('topStats').innerHTML=`
+    <div class="stat-card"><div class="stat-num">${peakTotal}</div><div class="stat-lbl">전체 인원</div></div>
+    <div class="stat-card"><div class="stat-num" style="color:#3B6D11;">${avgSunPct}%</div><div class="stat-lbl">${isWeek?'주일출석률':'주일 평균 출석률'}</div></div>
+    <div class="stat-card"><div class="stat-num" style="color:#185FA5;">${avgCellPct}%</div><div class="stat-lbl">${isWeek?'셀출석률':'셀 평균 출석률'}</div></div>
+    <div class="stat-card"><div class="stat-num" style="color:#3B6D11;">${avgSunAtt}</div><div class="stat-lbl">${isWeek?'주일출석 합계':'주일 평균 출석'}</div></div>
+    <div class="stat-card"><div class="stat-num" style="color:#A32D2D;">${isWeek?s.absC:avgSunAbs}</div><div class="stat-lbl">${isWeek?'주일결석 합계':'주일 평균 결석'}</div></div>`;
+
+
+
+  // 네트별 출석률
+  let nh='';
+  NETS.forEach(net=>{
+    // 모든 레벨 멤버 포함 (네트직속+G12직속+144셀직속+1728셀)
+    const ms=[
+      ...(state.nets[net]?.members||[]),
+      ...Object.values(state.nets[net]?.g12||{}).flatMap(gd=>[
+        ...(gd?.members||[]),
+        ...Object.values(gd?.c144||{}).flatMap(d144=>[
+          ...(d144?.members||[]),
+          ...Object.values(d144?.c1728||{}).flatMap(d1728=>d1728?.members||[])
+        ])
+      ])
+    ];
+    const tot=ms.length;
+    if(!tot){return;}
+    // 오늘까지 지나간 주일만 사용 (pastKeys 재사용)
+    const netPastKeys = pastKeys.length ? pastKeys : keys;
+    // 각 주일별 출석자 수 집계 후 평균
+    const netWeeklyAtt = netPastKeys.map(dk =>
+      ms.filter(m=>(m.att[dk]!==undefined?m.att[dk]:'abs')==='att').length
+    );
+    const netSessCnt = netPastKeys.length || 1;
+    const avgNetAtt = Math.round(netWeeklyAtt.reduce((a,b)=>a+b,0) / netSessCnt);
+    const p = tot ? Math.round(avgNetAtt/tot*100) : 0;
+    // 주간이면 해당 주 출석 수, 그 외엔 평균
+    const dispAtt = isWeek
+      ? ms.filter(m=>(m.att[netPastKeys[0]]!==undefined?m.att[netPastKeys[0]]:'abs')==='att').length
+      : avgNetAtt;
+    const dispPct = tot ? Math.round(dispAtt/tot*100) : 0;
+    const dispLabel = isWeek ? `${dispPct}% (${dispAtt}명)` : `${dispPct}% (평균 ${dispAtt}명)`;
+    nh+=`<div class="net-stat-row"><span class="net-stat-name">${net}네트</span><div class="bar-bg"><div class="bar-fill bar-green" style="width:${dispPct}%"></div></div><span class="net-stat-pct">${dispLabel}</span></div>`;
+  });
+  document.getElementById('netStats').innerHTML = nh || '<div style="color:var(--text2);font-size:13px;">데이터 없음</div>';
+
+  // 교육과정 이수 현황
+  let ch='';
+  COURSES.forEach((c,i)=>{
+    const done=all.filter(x=>x.m.courses[c]).length;
+    const p=all.length?Math.round(done/all.length*100):0;
+    ch+=`<div class="net-stat-row"><span class="net-stat-name" style="font-size:12px;">${COURSE_SHORT[i]}</span><div class="bar-bg"><div class="bar-fill bar-blue" style="width:${p}%"></div></div><span class="net-stat-pct">${done}명 (${p}%)</span></div>`;
+  });
+  document.getElementById('courseStats').innerHTML=ch;
+
+  // 출석 현황 분포
+  document.getElementById('attDist').innerHTML=`
+    <div style="flex:1;min-width:260px;">
+      <div style="font-size:13px;font-weight:600;margin-bottom:10px;">주일출석 (${label})</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <div style="text-align:center;padding:.8rem 1.2rem;background:#EAF3DE;border-radius:8px;flex:1;"><div style="font-size:20px;font-weight:600;color:#3B6D11;">${avgSunAtt}</div><div style="font-size:11px;color:#3B6D11;">${isWeek?'출석':'평균 출석'}</div></div>
+        <div style="text-align:center;padding:.8rem 1.2rem;background:#FCEBEB;border-radius:8px;flex:1;"><div style="font-size:20px;font-weight:600;color:#A32D2D;">${isWeek?s.absC:avgSunAbs}</div><div style="font-size:11px;color:#A32D2D;">${isWeek?'결석':'평균 결석'}</div></div>
+        <div style="text-align:center;padding:.8rem 1.2rem;background:#FEF3E2;border-radius:8px;flex:1;"><div style="font-size:20px;font-weight:600;color:#c8973a;">${newCount}</div><div style="font-size:11px;color:#c8973a;">${isWeek?'새신자':'새신자 합계'}</div></div>
+      </div>
+    </div>
+    <div style="flex:1;min-width:260px;">
+      <div style="font-size:13px;font-weight:600;margin-bottom:10px;">셀출석 (${cellLabel})</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <div style="text-align:center;padding:.8rem 1.2rem;background:#EAF3DE;border-radius:8px;flex:1;"><div style="font-size:20px;font-weight:600;color:#3B6D11;">${avgCellAtt}</div><div style="font-size:11px;color:#3B6D11;">${isWeek?'출석':'평균 출석'}</div></div>
+        <div style="text-align:center;padding:.8rem 1.2rem;background:#FCEBEB;border-radius:8px;flex:1;"><div style="font-size:20px;font-weight:600;color:#A32D2D;">${isWeek?cs.absC:avgCellAbs}</div><div style="font-size:11px;color:#A32D2D;">${isWeek?'결석':'평균 결석'}</div></div>
+      </div>
+    </div>`;
+
+  renderDashMembers();
+  renderTrendChart();
+}
+
+// ── 개인별 출석 내역 (네트별 접기/펼치기) ───────────────
+const dashNetOpen = {}; // 대시보드 네트별 열림 상태
+const sundayNetOpen = {};  // 주일출석 네트별
+const sundayG12Open = {};  // 주일출석 G12별
+const sunday144Open = {};  // 주일출석 144셀별
+const cellNetOpen = {};    // 셀출석 네트별
+const cellG12Open = {};    // 셀출석 G12별
+const cell144Open = {};    // 셀출석 144셀별
+
+window.toggleSundayNet = function(net) {
+  sundayNetOpen[net] = !sundayNetOpen[net];
+  renderSunday();
+};
+window.toggleCellNet = function(net) {
+  cellNetOpen[net] = !cellNetOpen[net];
+  renderCellAtt();
+};
+
+window.toggleDashNet = function(net) {
+  dashNetOpen[net] = !dashNetOpen[net];
+  renderDashMembers();
+};
+
+function renderDashMembers() {
+  const keys = getPeriodKeys();
+  const ckeys = getCellPeriodKeys(keys);
+  const dk = getDateKey();
+  // 셀출석 키: cellDateKey가 있으면 사용, 없으면 해당 주일 기준 월~토 중 데이터 있는 키 탐색
+  let cdk = getCellDateKey();
+  if(!cdk || cdk === 'cell-') {
+    // 해당 주일 기준 전주 월~토 중 데이터가 있는 날 탐색
+    const {y,m,d} = currentDate;
+    const sunday = new Date(y,m-1,d);
+    for(let i=6; i>=1; i--) {
+      const day = new Date(sunday);
+      day.setDate(sunday.getDate()-i);
+      const tryKey = 'cell-'+day.getFullYear()+'-'+String(day.getMonth()+1).padStart(2,'0')+'-'+String(day.getDate()).padStart(2,'0');
+      // 이 키로 데이터가 있는 멤버가 있으면 이 키 사용
+      const hasData = getAllMembers4().some(({m:mem}) => mem.att[tryKey] !== undefined);
+      if(hasData) { cdk = tryKey; break; }
+    }
+  }
+  const search = document.getElementById('dashSearch')?.value.toLowerCase() || '';
+  const filterNet = document.getElementById('dashFilterNet')?.value || '';
+  const nets = filterNet ? [filterNet] : NETS;
+  const ATT_COLOR = {att:'#3B6D11', abs:'#A32D2D'};
+  const ATT_BG2 = {att:'#EAF3DE', abs:'#FCEBEB'};
+
+  let html = '';
+  nets.forEach(net => {
+    if (!state.nets[net]) return;
+    const rows = [];
+    // 네트 직속
+    (state.nets[net]?.members||[]).forEach(m=>{
+      if(search && !m.name.includes(search)) return;
+      rows.push({net, g12:'', c144:'', cell:'(네트직속)', m});
+    });
+    // G12/144/1728 모든 레벨
+    Object.entries(state.nets[net]?.g12||{}).forEach(([g12,gd])=>{
+      (gd?.members||[]).forEach(m=>{
+        if(search && !m.name.includes(search)) return;
+        rows.push({net, g12, c144:'', cell:'(G12직속)', m});
+      });
+      Object.entries(gd?.c144||{}).forEach(([c144,d144])=>{
+        (d144?.members||[]).forEach(m=>{
+          if(search && !m.name.includes(search)) return;
+          rows.push({net, g12, c144, cell:'(144셀직속)', m});
+        });
+        Object.entries(d144?.c1728||{}).forEach(([c1728,d1728])=>{
+          (d1728?.members||[]).forEach(m=>{
+            if(search && !m.name.includes(search)) return;
+            rows.push({net, g12, c144, cell:c1728, m});
+          });
+        });
+      });
+    });
+    rows.sort((a,b)=>a.m.name.localeCompare(b.m.name,'ko'));
+    if (!rows.length) return;
+
+    // 검색 중이거나 기본 펼침 없으면 닫힘 (첫 로드시 전부 닫힘)
+    const isOpen = search ? true : (dashNetOpen[net] === true);
+
+    // 출석 요약 (헤더에 표시)
+    const attCount = rows.filter(({m}) => (m.att[dk]!==undefined?m.att[dk]:'abs')==='att').length;
+    const attPct = rows.length ? Math.round(attCount/rows.length*100) : 0;
+    const attColor = attPct >= 80 ? '#3B6D11' : attPct >= 50 ? '#854F0B' : '#A32D2D';
+
+    const memberRows = isOpen ? rows.map(({net:rNet, g12, c144, cell, m}) => {
+      const sAtt = m.att[dk] !== undefined ? m.att[dk] : 'abs';
+      const cAtt = m.att[cdk] !== undefined ? m.att[cdk] : 'abs';
+      const sundayBadge = `<span style="font-size:11px;padding:2px 8px;border-radius:10px;background:${ATT_BG2[sAtt]};color:${ATT_COLOR[sAtt]};font-weight:500;">${ATT_LBL[sAtt]}</span>`;
+      const cellBadge   = `<span style="font-size:11px;padding:2px 8px;border-radius:10px;background:${ATT_BG2[cAtt]};color:${ATT_COLOR[cAtt]};font-weight:500;">${ATT_LBL[cAtt]}</span>`;
+      const sAttTotal = keys.filter(k=>(m.att[k]!==undefined?m.att[k]:'abs')==='att').length;
+      const sAbsTotal = keys.filter(k=>(m.att[k]!==undefined?m.att[k]:'abs')==='abs').length;
+      const cAttTotal = ckeys.filter(k=>(m.att[k]!==undefined?m.att[k]:'abs')==='att').length;
+      const cAbsTotal = ckeys.filter(k=>(m.att[k]!==undefined?m.att[k]:'abs')==='abs').length;
+      const periodSummary = keys.length > 1
+        ? `<span style="font-size:10px;color:var(--success-text);">출석 ${sAttTotal}회</span><span style="font-size:10px;color:var(--danger-text);margin-left:4px;">결석 ${sAbsTotal}회</span>` : '';
+      const cellPeriodSummary = ckeys.length > 1
+        ? `<span style="font-size:10px;color:var(--success-text);">출석 ${cAttTotal}회</span><span style="font-size:10px;color:var(--danger-text);margin-left:4px;">결석 ${cAbsTotal}회</span>` : '';
+      const sundayBtns = ATT.map(s =>
+        `<button class="att-btn ${(sAtt||'abs')===s?s:''}" style="font-size:10px;padding:2px 7px;"
+          onclick="setMemberAtt('${net}','${g12}','${c144}','${cell}','${m.id}','sunday','${s}')">${ATT_LBL[s]}</button>`
+      ).join('');
+      const cellBtns = ATT.map(s =>
+        `<button class="att-btn ${(cAtt||'abs')===s?s:''}" style="font-size:10px;padding:2px 7px;"
+          onclick="setMemberAtt('${net}','${g12}','${c144}','${cell}','${m.id}','cell','${s}')">${ATT_LBL[s]}</button>`
+      ).join('');
+      return `<div style="display:grid;grid-template-columns:120px 1fr 1fr;gap:8px;padding:9px 0;border-bottom:0.5px solid var(--border);align-items:start;">
+        <div>
+          <div style="font-size:13px;font-weight:600;">${m.name}</div>
+          <div style="font-size:10px;color:var(--text2);">${[g12,c144,cell].filter(Boolean).join(' › ')}</div>
+        </div>
+        <div>
+          <div style="display:flex;align-items:center;gap:5px;margin-bottom:4px;flex-wrap:wrap;">
+            <span style="font-size:11px;color:var(--text2);">주일</span>${sundayBadge}${periodSummary}
+          </div>
+          <div style="display:flex;gap:3px;flex-wrap:wrap;">${sundayBtns}</div>
+        </div>
+        <div>
+          <div style="display:flex;align-items:center;gap:5px;margin-bottom:4px;flex-wrap:wrap;">
+            <span style="font-size:11px;color:var(--text2);">셀</span>${cellBadge}${cellPeriodSummary}
+          </div>
+          <div style="display:flex;gap:3px;flex-wrap:wrap;">${cellBtns}</div>
+        </div>
+      </div>`;
+    }).join('') : '';
+
+    html += `<div style="margin-bottom:8px;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;">
+      <div onclick="toggleDashNet('${net}')" style="padding:10px 14px;cursor:pointer;display:flex;align-items:center;gap:8px;background:var(--bg2);user-select:none;">
+        <span style="font-size:13px;">${isOpen ? '▼' : '▶'}</span>
+        <span style="font-size:14px;font-weight:600;">${net}네트</span>
+        <span class="net-badge">${rows.length}명</span>
+        <span style="margin-left:auto;font-size:12px;font-weight:600;color:${attColor};">출석 ${attCount}/${rows.length} (${attPct}%)</span>
+      </div>
+      ${isOpen ? `<div style="padding:0 12px 8px;">${memberRows}</div>` : ''}
+    </div>`;
+  });
+
+  document.getElementById('dashMemberList').innerHTML = html ||
+    '<div style="color:var(--text2);text-align:center;padding:2rem;">데이터가 없습니다.</div>';
+}
+
+window.setMemberAtt = function(net, g12, c144, cell, id, type, status) {
+  const dk = type === 'sunday' ? getDateKey() : getCellDateKey();
+  let m = null;
+  if(!g12) { m=(state.nets[net]?.members||[]).find(x=>x.id==id); }
+  else if(!c144) { m=(state.nets[net]?.g12[g12]?.members||[]).find(x=>x.id==id); }
+  else if(!cell||cell==='(144셀직속)') { m=(state.nets[net]?.g12[g12]?.c144[c144]?.members||[]).find(x=>x.id==id); }
+  else { m=(state.nets[net]?.g12[g12]?.c144[c144]?.c1728[cell]?.members||[]).find(x=>x.id==id); }
+  if(!m) return;
+  setAttVal(m, dk, status);
+  renderDashMembers();
+  saveToCloud();
+};
+
+// ── 관리 ─────────────────────────────────────────────
+const manageG12Open = {};
+
+function renderManage() {
+  const net = document.getElementById('manageNet')?.value || NETS[0];
+  const g12s = state.nets[net]?.g12 || {};
+  let html = '';
+
+  // 네트 직속 멤버 표시
+  const netDirectMembers = [...(state.nets[net]?.members||[])].sort((a,b)=>a.name.localeCompare(b.name,'ko'));
+  if(netDirectMembers.length > 0) {
+    html += `<div style="margin-bottom:12px;border:1px solid var(--border);border-radius:var(--radius);padding:10px;">
+      <div style="font-size:13px;font-weight:600;margin-bottom:8px;color:var(--primary);">📌 네트 직속 멤버</div>
+      ${netDirectMembers.map(m=>`<div class="cell-row"><span style="font-size:13px;flex:1;">${m.name}${m.newDate?` <span style="font-size:10px;color:#c8973a;font-weight:600;">🌱새신자(${m.newDate})</span>`:''}</span><button class="sm" onclick="openEditMember('${net}','','','','${m.id}')" style="color:var(--primary);margin-right:4px;">수정</button><button class="sm" onclick="deleteNetMember('${net}','${m.id}')" style="color:var(--text2);">삭제</button></div>`).join('')}
+    </div>`;
+  }
+
+  Object.entries(g12s).forEach(([g12name, gd]) => {
+    // G12 직속 멤버
+    const g12DirectMembers = [...(gd?.members||[])].sort((a,b)=>a.name.localeCompare(b.name,'ko'));
+    let g12Html = '';
+    if(g12DirectMembers.length > 0) {
+      g12Html += `<div style="margin:0 0 8px 8px;padding:8px;border:1px solid var(--border);border-radius:var(--radius);">
+        <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:6px;">📌 G12 직속 멤버</div>
+        ${g12DirectMembers.map(m=>`<div class="cell-row"><span style="font-size:13px;flex:1;">${m.name}</span><button class="sm" onclick="openEditMember('${net}','${g12name}','','','${m.id}')" style="color:var(--primary);margin-right:4px;">수정</button><button class="sm" onclick="deleteG12Member('${net}','${g12name}','${m.id}')" style="color:var(--text2);">삭제</button></div>`).join('')}
+      </div>`;
+    }
+    Object.entries(gd?.c144 || {}).forEach(([c144name, d144]) => {
+      // 144셀 직속 멤버
+      const c144DirectMembers = [...(d144?.members||[])].sort((a,b)=>a.name.localeCompare(b.name,'ko'));
+      let c144Html = '';
+      if(c144DirectMembers.length > 0) {
+        c144Html += `<div style="margin:0 0 8px 16px;padding:8px;border:1px solid var(--border);border-radius:var(--radius);">
+          <div style="font-size:11px;font-weight:600;color:var(--text2);margin-bottom:6px;">📌 144셀 직속 멤버</div>
+          ${c144DirectMembers.map(m=>`<div class="cell-row"><span style="font-size:13px;flex:1;">${m.name}</span><button class="sm" onclick="openEditMember('${net}','${g12name}','${c144name}','','${m.id}')" style="color:var(--primary);margin-right:4px;">수정</button><button class="sm" onclick="delete144Member('${net}','${g12name}','${c144name}','${m.id}')" style="color:var(--text2);">삭제</button></div>`).join('')}
+        </div>`;
+      }
+      Object.entries(d144?.c1728 || {}).forEach(([c1728name, d1728]) => {
+        const members = [...(d1728.members||[])].sort((a,b)=>a.name.localeCompare(b.name,'ko'));
+        c144Html += `<div style="margin-left:16px;margin-bottom:8px;border:1px solid var(--border);border-radius:var(--radius);padding:8px;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+            <span style="font-size:12px;font-weight:600;color:var(--text2);">1728셀</span>
+            <span style="font-size:13px;font-weight:600;">${c1728name}</span>
+            <span class="net-badge">${members.length}명</span>
+            <button class="danger sm" onclick="delete1728('${net}','${g12name}','${c144name}','${c1728name}')" style="margin-left:auto;font-size:11px;">삭제</button>
+          </div>
+          ${members.length===0
+            ? `<div style="font-size:12px;color:var(--text2);">구성원 없음</div>`
+            : members.map(m=>`<div class="cell-row"><span style="font-size:13px;flex:1;">${m.name}</span><button class="sm" onclick="openEditMember('${net}','${g12name}','${c144name}','${c1728name}','${m.id}')" style="color:var(--primary);margin-right:4px;">수정</button><button class="sm" onclick="deleteMember4('${net}','${g12name}','${c144name}','${c1728name}','${m.id}')" style="color:var(--text2);">삭제</button></div>`).join('')}
+        </div>`;
+      });
+      const cnt144 = Object.values(d144?.c1728||{}).reduce((s,d)=>s+d.members.length,0);
+      g12Html += `<div style="margin-left:8px;margin-bottom:10px;border:1px solid var(--border2);border-radius:var(--radius);padding:10px;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+          <span style="font-size:12px;font-weight:600;color:var(--text2);">144셀</span>
+          <span style="font-size:13px;font-weight:600;">${c144name}</span>
+          <span class="net-badge">${cnt144}명</span>
+          <button class="danger sm" onclick="delete144('${net}','${g12name}','${c144name}')" style="margin-left:auto;font-size:11px;">삭제</button>
+        </div>
+        ${c144Html || '<div style="font-size:12px;color:var(--text2);padding:4px 0;">1728셀 없음</div>'}
+      </div>`;
+    });
+    const cntG12 = Object.values(gd?.c144||{}).reduce((s,d)=>s+Object.values(d?.c1728||{}).reduce((s2,d2)=>s2+d2.members.length,0),0);
+    const isG12Open = manageG12Open[net+'_'+g12name] !== false; // 기본 열림
+    html += `<div style="margin-bottom:8px;border:2px solid var(--border2);border-radius:var(--radius);overflow:hidden;">
+      <div onclick="toggleManageG12('${net}','${g12name}')" style="padding:10px 12px;cursor:pointer;display:flex;align-items:center;gap:8px;background:var(--bg2);user-select:none;">
+        <span style="font-size:12px;">${isG12Open?'▼':'▶'}</span>
+        <span style="font-size:12px;font-weight:600;color:var(--primary);">G12</span>
+        <span style="font-size:14px;font-weight:700;">${g12name}</span>
+        <span class="net-badge">${cntG12}명</span>
+        <button class="danger sm" onclick="event.stopPropagation();deleteG12('${net}','${g12name}')" style="margin-left:auto;font-size:11px;">삭제</button>
+      </div>
+      ${isG12Open ? `<div style="padding:10px 12px;">${g12Html || '<div style="font-size:12px;color:var(--text2);">144셀 없음</div>'}</div>` : ''}
+    </div>`;
+  });
+
+  document.getElementById('manageContent').innerHTML = html || '<div style="color:var(--text2);padding:1rem;font-size:13px;">G12가 없습니다. 아래에서 G12를 먼저 추가하세요.</div>';
+
+  // manage 셀렉트 업데이트
+  const g12Sel = document.getElementById('manage144Parent');
+  const all144Sel = document.getElementById('manage1728Parent144');
+  if(g12Sel) {
+    const prevG12 = g12Sel.value;
+    g12Sel.innerHTML = '<option value="">G12 선택</option>';
+    Object.keys(g12s).forEach(g=>g12Sel.innerHTML+=`<option value="${g}">${g}</option>`);
+    if(prevG12 && g12Sel.querySelector(`option[value="${prevG12}"]`)) g12Sel.value = prevG12;
+  }
+  updateManage144Select();
+}
+
+function updateManage144Select() {
+  const net = document.getElementById('manageNet')?.value || NETS[0];
+  const g12 = document.getElementById('manage144Parent')?.value || '';
+  const sel = document.getElementById('manage1728Parent144');
+  if(!sel) return;
+  const prev = sel.value;
+  sel.innerHTML = '<option value="">144셀 선택</option>';
+  if(g12 && state.nets[net]?.g12[g12]) {
+    Object.keys(state.nets[net].g12[g12].c144||{}).forEach(c=>sel.innerHTML+=`<option value="${c}">${c}</option>`);
+  }
+  if(prev && sel.querySelector(`option[value="${prev}"]`)) sel.value = prev;
+}
+
+window.toggleManageG12 = function(net, g12name) {
+  const key = net+'_'+g12name;
+  manageG12Open[key] = manageG12Open[key] === false ? true : false;
+  renderManage();
+};
+
+// ── 새신자 날짜 토글
+window.toggleNewMemberDate = function() {
+  const cb = document.getElementById('newMemberIsNew');
+  const wrap = document.getElementById('newMemberDateWrap');
+  const dateInput = document.getElementById('newMemberDate');
+  if(!cb || !wrap) return;
+  wrap.style.display = cb.checked ? 'flex' : 'none';
+  if(cb.checked && dateInput && !dateInput.value) {
+    // 기본값: 현재 선택된 주일
+    const {y,m,d} = currentDate;
+    dateInput.value = `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+  }
+};
+
+// ── G12 추가/삭제
+window.addG12 = function() {
+  const net = document.getElementById('manageNet')?.value || NETS[0];
+  const name = document.getElementById('newG12Name').value.trim();
+  if(!name){showToast('G12 이름을 입력해주세요');return;}
+  if(!state.nets[net]) state.nets[net] = {g12:{}, members:[]};
+  if(!state.nets[net].g12) state.nets[net].g12={};
+  if(state.nets[net].g12[name]){showToast('같은 이름의 G12가 있습니다');return;}
+  state.nets[net].g12[name]={c144:{}};
+  document.getElementById('newG12Name').value='';
+  renderManage(); updateNewMemberSelects();
+  saveToCloud().then(()=>showToast('✅ G12가 추가되었습니다'));
+};
+window.deleteG12 = function(net,g12) {
+  if(!confirm(`"${g12}" G12를 삭제할까요? 하위 데이터가 모두 삭제됩니다.`)) return;
+  delete state.nets[net].g12[g12];
+  renderManage(); updateNewMemberSelects(); saveToCloud();
+};
+
+// ── 144셀 추가/삭제
+window.add144 = function() {
+  const net = document.getElementById('manageNet')?.value || NETS[0];
+  const g12 = document.getElementById('manage144Parent').value;
+  const name = document.getElementById('new144Name').value.trim();
+  if(!g12){showToast('G12를 선택해주세요');return;}
+  if(!name){showToast('144셀 이름을 입력해주세요');return;}
+  if(!state.nets[net].g12[g12].c144) state.nets[net].g12[g12].c144={};
+  if(state.nets[net].g12[g12].c144[name]){showToast('같은 이름의 144셀이 있습니다');return;}
+  state.nets[net].g12[g12].c144[name]={c1728:{}};
+  document.getElementById('new144Name').value='';
+  renderManage(); updateNewMemberSelects();
+  saveToCloud().then(()=>showToast('✅ 144셀이 추가되었습니다'));
+};
+window.delete144 = function(net,g12,c144) {
+  if(!confirm(`"${c144}" 144셀을 삭제할까요?`)) return;
+  delete state.nets[net].g12[g12].c144[c144];
+  renderManage(); updateNewMemberSelects(); saveToCloud();
+};
+
+// ── 1728셀 추가/삭제
+window.add1728 = function() {
+  const net = document.getElementById('manageNet')?.value || NETS[0];
+  const g12 = document.getElementById('manage144Parent').value;
+  const c144 = document.getElementById('manage1728Parent144').value;
+  const name = document.getElementById('new1728Name').value.trim();
+  if(!g12||!c144){showToast('G12와 144셀을 선택해주세요');return;}
+  if(!name){showToast('1728셀 이름을 입력해주세요');return;}
+  if(!state.nets[net].g12[g12].c144[c144].c1728) state.nets[net].g12[g12].c144[c144].c1728={};
+  if(state.nets[net].g12[g12].c144[c144].c1728[name]){showToast('같은 이름의 1728셀이 있습니다');return;}
+  state.nets[net].g12[g12].c144[c144].c1728[name]={members:[]};
+  document.getElementById('new1728Name').value='';
+  renderManage(); updateNewMemberSelects();
+  saveToCloud().then(()=>showToast('✅ 1728셀이 추가되었습니다'));
+};
+window.delete1728 = function(net,g12,c144,c1728) {
+  if(!confirm(`"${c1728}" 1728셀을 삭제할까요?`)) return;
+  delete state.nets[net].g12[g12].c144[c144].c1728[c1728];
+  renderManage(); updateNewMemberSelects(); saveToCloud();
+};
+
+// ── 소속 수정 모달
+let _editMember = {}; // 현재 수정 중인 멤버 정보
+
+window.openEditMember = function(net, g12, c144, c1728, id) {
+  // 수정할 멤버 정보 저장
+  _editMember = {net, g12, c144, c1728, id};
+
+  // 이름 표시
+  const m = findMemberById(id);
+  if(!m) return;
+  const nameInput = document.getElementById('editMemberNameInput');
+  if(nameInput) nameInput.value = m.name;
+
+  // 네트 셀렉트 채우기
+  const netSel = document.getElementById('editNet');
+  netSel.innerHTML = '';
+  NETS.forEach(n => netSel.innerHTML += `<option value="${n}" ${n===net?'selected':''}>${n}네트</option>`);
+
+  // G12/144/1728 셀렉트 채우기
+  fillEditG12(net, g12, c144, c1728);
+
+  // 모달 열기
+  const ov = document.getElementById('editMemberOverlay');
+  ov.classList.remove('hidden');
+  ov.style.display = 'flex';
+
+  // 네트 변경 이벤트
+  netSel.onchange = () => fillEditG12(netSel.value, '', '', '');
+};
+
+function findMemberById(id) {
+  for(const net of NETS) {
+    for(const m of state.nets[net]?.members||[]) { if(m.id==id) return m; }
+    for(const gd of Object.values(state.nets[net]?.g12||{})) {
+      for(const m of gd?.members||[]) { if(m.id==id) return m; }
+      for(const d144 of Object.values(gd?.c144||{})) {
+        for(const m of d144?.members||[]) { if(m.id==id) return m; }
+        for(const d1728 of Object.values(d144?.c1728||{})) {
+          for(const m of d1728?.members||[]) { if(m.id==id) return m; }
+        }
+      }
+    }
+  }
+  return null;
+}
+
+function fillEditG12(net, g12, c144, c1728) {
+  const g12Sel = document.getElementById('editG12');
+  const sel144 = document.getElementById('edit144');
+  const sel1728 = document.getElementById('edit1728');
+  g12Sel.innerHTML = '<option value="">(선택 안 함 - 네트 직속)</option>';
+  sel144.innerHTML = '<option value="">(선택 안 함 - G12 직속)</option>';
+  sel1728.innerHTML = '<option value="">(선택 안 함 - 144셀 직속)</option>';
+  Object.keys(state.nets[net]?.g12||{}).forEach(g => {
+    g12Sel.innerHTML += `<option value="${g}" ${g===g12?'selected':''}>${g}</option>`;
+  });
+  if(g12 && state.nets[net]?.g12[g12]) {
+    Object.keys(state.nets[net].g12[g12].c144||{}).forEach(c => {
+      sel144.innerHTML += `<option value="${c}" ${c===c144?'selected':''}>${c}</option>`;
+    });
+  }
+  if(g12 && c144 && state.nets[net]?.g12[g12]?.c144[c144]) {
+    Object.keys(state.nets[net].g12[g12].c144[c144].c1728||{}).forEach(c => {
+      sel1728.innerHTML += `<option value="${c}" ${c===c1728?'selected':''}>${c}</option>`;
+    });
+  }
+  g12Sel.onchange = () => fillEditG12(net, g12Sel.value, '', '');
+  document.getElementById('edit144').onchange = () => {
+    const g = g12Sel.value, c = document.getElementById('edit144').value;
+    const s1728 = document.getElementById('edit1728');
+    s1728.innerHTML = '<option value="">(선택 안 함 - 144셀 직속)</option>';
+    if(g && c && state.nets[net]?.g12[g]?.c144[c]) {
+      Object.keys(state.nets[net].g12[g].c144[c].c1728||{}).forEach(c2 => {
+        s1728.innerHTML += `<option value="${c2}">${c2}</option>`;
+      });
+    }
+  };
+}
+
+window.closeEditMember = function() {
+  const ov = document.getElementById('editMemberOverlay');
+  ov.classList.add('hidden');
+  ov.style.display = 'none';
+};
+
+window.saveEditMember = function() {
+  const {net:oldNet, g12:oldG12, c144:oldC144, c1728:oldC1728, id} = _editMember;
+  const newName = document.getElementById('editMemberNameInput')?.value.trim();
+  if(!newName) { showToast('이름을 입력해주세요'); return; }
+  const newNet  = document.getElementById('editNet').value;
+  const newG12  = document.getElementById('editG12').value;
+  const newC144 = document.getElementById('edit144').value;
+  const newC1728= document.getElementById('edit1728').value;
+
+  // 기존 위치에서 멤버 찾아 제거
+  let member = null;
+  if(!oldG12) { 
+    const arr = state.nets[oldNet]?.members||[];
+    const idx = arr.findIndex(m=>m.id==id);
+    if(idx!==-1) { member=arr[idx]; arr.splice(idx,1); }
+  } else if(!oldC144) {
+    const arr = state.nets[oldNet]?.g12[oldG12]?.members||[];
+    const idx = arr.findIndex(m=>m.id==id);
+    if(idx!==-1) { member=arr[idx]; arr.splice(idx,1); }
+  } else if(!oldC1728 || oldC1728==='(144셀직속)') {
+    const arr = state.nets[oldNet]?.g12[oldG12]?.c144[oldC144]?.members||[];
+    const idx = arr.findIndex(m=>m.id==id);
+    if(idx!==-1) { member=arr[idx]; arr.splice(idx,1); }
+  } else {
+    const arr = state.nets[oldNet]?.g12[oldG12]?.c144[oldC144]?.c1728[oldC1728]?.members||[];
+    const idx = arr.findIndex(m=>m.id==id);
+    if(idx!==-1) { member=arr[idx]; arr.splice(idx,1); }
+  }
+  if(!member) { showToast('❌ 멤버를 찾을 수 없습니다'); return; }
+  // 이름 변경
+  member.name = newName;
+
+  // 새 위치에 추가
+  if(!newG12) {
+    if(!state.nets[newNet].members) state.nets[newNet].members=[];
+    state.nets[newNet].members.push(member);
+  } else if(!newC144) {
+    if(!state.nets[newNet].g12[newG12].members) state.nets[newNet].g12[newG12].members=[];
+    state.nets[newNet].g12[newG12].members.push(member);
+  } else if(!newC1728) {
+    if(!state.nets[newNet].g12[newG12].c144[newC144].members) state.nets[newNet].g12[newG12].c144[newC144].members=[];
+    state.nets[newNet].g12[newG12].c144[newC144].members.push(member);
+  } else {
+    if(!state.nets[newNet].g12[newG12].c144[newC144].c1728[newC1728].members) state.nets[newNet].g12[newG12].c144[newC144].c1728[newC1728].members=[];
+    state.nets[newNet].g12[newG12].c144[newC144].c1728[newC1728].members.push(member);
+  }
+
+  closeEditMember();
+  renderManage();
+  renderAtt();
+  saveToCloud().then(()=>showToast('✅ 소속이 수정되고 저장되었습니다'));
+};
+
+// ── 레벨별 직속 멤버 삭제
+window.deleteNetMember = function(net,id) {
+  state.nets[net].members = (state.nets[net].members||[]).filter(m=>m.id!=id);
+  renderManage(); renderAtt(); saveToCloud();
+};
+window.deleteG12Member = function(net,g12,id) {
+  state.nets[net].g12[g12].members = (state.nets[net].g12[g12].members||[]).filter(m=>m.id!=id);
+  renderManage(); renderAtt(); saveToCloud();
+};
+window.delete144Member = function(net,g12,c144,id) {
+  state.nets[net].g12[g12].c144[c144].members = (state.nets[net].g12[g12].c144[c144].members||[]).filter(m=>m.id!=id);
+  renderManage(); renderAtt(); saveToCloud();
+};
+
+// ── 1728셀 멤버 삭제
+window.deleteMember4 = function(net,g12,c144,c1728,id) {
+  const members = state.nets[net].g12[g12].c144[c144].c1728[c1728].members;
+  state.nets[net].g12[g12].c144[c144].c1728[c1728].members = members.filter(m=>m.id!=id);
+  renderManage(); renderAtt(); saveToCloud();
+};
+window.deleteMember = window.deleteMember4;
+
+// ── 구성원 추가 셀렉트 연동
+function updateNewMemberSelects() {
+  const net = document.getElementById('newMemberNet')?.value || '';
+  const g12Sel = document.getElementById('newMemberG12');
+  const s144Sel = document.getElementById('newMember144');
+  const s1728Sel = document.getElementById('newMember1728');
+  if(!g12Sel||!s144Sel||!s1728Sel) return;
+  const prevG12=g12Sel.value, prev144=s144Sel.value, prev1728=s1728Sel.value;
+  g12Sel.innerHTML='<option value="">(선택 안 함 - 네트 직속)</option>';
+  s144Sel.innerHTML='<option value="">(선택 안 함 - G12 직속)</option>';
+  s1728Sel.innerHTML='<option value="">(선택 안 함 - 144셀 직속)</option>';
+  if(!net||!state.nets[net]) return;
+  Object.keys(state.nets[net].g12||{}).forEach(g=>g12Sel.innerHTML+=`<option value="${g}">${g}</option>`);
+  if(prevG12&&g12Sel.querySelector(`option[value="${prevG12}"]`)){
+    g12Sel.value=prevG12;
+    Object.keys(state.nets[net].g12[prevG12]?.c144||{}).forEach(c=>s144Sel.innerHTML+=`<option value="${c}">${c}</option>`);
+    if(prev144&&s144Sel.querySelector(`option[value="${prev144}"]`)){
+      s144Sel.value=prev144;
+      Object.keys(state.nets[net].g12[prevG12]?.c144[prev144]?.c1728||{}).forEach(c=>s1728Sel.innerHTML+=`<option value="${c}">${c}</option>`);
+      if(prev1728&&s1728Sel.querySelector(`option[value="${prev1728}"]`)) s1728Sel.value=prev1728;
+    }
+  }
+}
+
+// ── 구성원 추가 (선택한 단계까지만 소속 지정)
+window.addMember = function() {
+  const name  = document.getElementById('newMemberName').value.trim();
+  const net   = document.getElementById('newMemberNet').value;
+  const g12   = document.getElementById('newMemberG12').value;
+  const c144  = document.getElementById('newMember144').value;
+  const c1728 = document.getElementById('newMember1728').value;
+
+  if(!name) { showToast('이름을 입력해주세요'); return; }
+  if(!net)  { showToast('네트를 선택해주세요'); return; }
+
+  const isNew = document.getElementById('newMemberIsNew')?.checked || false;
+  const newDate = document.getElementById('newMemberDate')?.value || '';
+  const member = makeMember(name, isNew, newDate);
+
+  if(!g12) {
+    // 네트 직속
+    if(!state.nets[net].members) state.nets[net].members = [];
+    state.nets[net].members.push(member);
+  } else if(!c144) {
+    // G12 직속
+    if(!state.nets[net].g12[g12]) state.nets[net].g12[g12] = {c144:{}, members:[]};
+    if(!state.nets[net].g12[g12].members) state.nets[net].g12[g12].members = [];
+    state.nets[net].g12[g12].members.push(member);
+  } else if(!c1728) {
+    // 144셀 직속
+    if(!state.nets[net].g12[g12].c144[c144]) state.nets[net].g12[g12].c144[c144] = {c1728:{}, members:[]};
+    if(!state.nets[net].g12[g12].c144[c144].members) state.nets[net].g12[g12].c144[c144].members = [];
+    state.nets[net].g12[g12].c144[c144].members.push(member);
+  } else {
+    // 1728셀 멤버
+    if(!state.nets[net].g12[g12].c144[c144].c1728[c1728]) state.nets[net].g12[g12].c144[c144].c1728[c1728] = {members:[]};
+    if(!state.nets[net].g12[g12].c144[c144].c1728[c1728].members) state.nets[net].g12[g12].c144[c144].c1728[c1728].members = [];
+    state.nets[net].g12[g12].c144[c144].c1728[c1728].members.push(member);
+  }
+
+  document.getElementById('newMemberName').value='';
+  const isNewCb = document.getElementById('newMemberIsNew');
+  if(isNewCb) { isNewCb.checked=false; toggleNewMemberDate(); }
+  renderManage(); renderAtt();
+  saveToCloud().then(()=>showToast(`✅ ${isNew?'🌱 새신자 ':''}구성원이 추가되고 저장되었습니다`));
+};
+
+
+// ── 주일 드롭다운 초기화 및 이벤트 ─────────────────────
+function initSundayPicker() {
+  const picker = document.getElementById('sundayPicker');
+  if(!picker) return;
+  const today = new Date();
+  const y = today.getFullYear();
+  // 현재 연도 + 전년도 주일 목록
+  const allSundays = [...getSundaysOfYear(y-1), ...getSundaysOfYear(y)];
+  picker.innerHTML = '';
+  allSundays.forEach((s, i) => {
+    const sy=s.getFullYear(), sm=s.getMonth()+1, sd=s.getDate();
+    const wk = getWeekIndex(sy,sm,sd)+1;
+    const opt = document.createElement('option');
+    opt.value = `${sy}-${String(sm).padStart(2,'0')}-${String(sd).padStart(2,'0')}`;
+    opt.textContent = `${sy}년 ${sm}월 ${sd}일 (${wk}주차)`;
+    picker.appendChild(opt);
+  });
+  // 기본값: 오늘 기준 가장 가까운 이전 주일
+  const todayDow = today.getDay();
+  const nearest = new Date(today);
+  nearest.setDate(today.getDate() - todayDow);
+  const nKey = `${nearest.getFullYear()}-${String(nearest.getMonth()+1).padStart(2,'0')}-${String(nearest.getDate()).padStart(2,'0')}`;
+  if(picker.querySelector(`option[value="${nKey}"]`)) picker.value = nKey;
+  else picker.value = picker.options[picker.options.length-1]?.value || '';
+  // currentDate 업데이트
+  applyPickerDate(picker.value);
+}
+
+function applyPickerDate(val) {
+  if(!val) return;
+  const [y,m,d] = val.split('-').map(Number);
+  currentDate = {y,m,d};
+  populateCellDayPicker();
+  // dashWeek 드롭다운도 동기화
+  const wkEl = document.getElementById('dashWeek');
+  if(wkEl && wkEl.options.length > 0) {
+    const sundays = getSundaysOfYear(y);
+    const targetKey = `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const idx = sundays.findIndex(s => dateToKey(s) === targetKey);
+    if(idx >= 0) wkEl.value = String(idx);
+  }
+  // dashYear도 동기화
+  const yrEl = document.getElementById('dashYear');
+  if(yrEl) yrEl.value = String(y);
+}
+
+window.onSundayPickerChange = function() {
+  const picker = document.getElementById('sundayPicker');
+  applyPickerDate(picker.value);
+  setDate(false);
+  // 대시보드가 활성 탭이면 즉시 갱신
+  initDashControls();
+  renderDash();
+};
+
+// ── 셀모임 날짜 드롭다운 ──────────────────────────────
+// 선택된 주일의 이전 주 월~토 목록
+let cellDateKey = ''; // 현재 선택된 셀모임 날짜
+
+function populateCellDayPicker() {
+  const picker = document.getElementById('cellDayPicker');
+  if(!picker) return;
+  const {y,m,d} = currentDate;
+  const sunday = new Date(y,m-1,d);
+  // 이전 주 월~토 (6일간)
+  const days = [];
+  for(let i=6; i>=1; i--) {
+    const day = new Date(sunday);
+    day.setDate(sunday.getDate()-i);
+    days.push(day);
+  }
+  const dayNames = ['일','월','화','수','목','금','토'];
+  picker.innerHTML = '';
+  days.forEach(day => {
+    const dy=day.getFullYear(), dm=day.getMonth()+1, dd=day.getDate(), dow=day.getDay();
+    const key = `${dy}-${String(dm).padStart(2,'0')}-${String(dd).padStart(2,'0')}`;
+    const opt = document.createElement('option');
+    opt.value = key;
+    opt.textContent = `${dm}월 ${dd}일 (${dayNames[dow]})`;
+    picker.appendChild(opt);
+  });
+  // 기본: 토요일(마지막) 선택
+  picker.value = picker.options[picker.options.length-1]?.value || '';
+  cellDateKey = picker.value;
+  updateCellDateLabel();
+}
+
+window.onCellDayPickerChange = function() {
+  const picker = document.getElementById('cellDayPicker');
+  cellDateKey = picker.value;
+  updateCellDateLabel();
+  renderCellAtt();
+};
+
+function updateCellDateLabel() {
+  const lbl = document.getElementById('cellDateLabel');
+  if(!lbl || !cellDateKey) return;
+  const [cy,cm,cd] = cellDateKey.split('-').map(Number);
+  const dayNames = ['일','월','화','수','목','금','토'];
+  const dow = new Date(cy,cm-1,cd).getDay();
+  lbl.textContent = `(${cy}년 ${cm}월 ${cd}일 ${dayNames[dow]}요일 셀모임)`;
+}
+
+// ── 인쇄 ─────────────────────────────────────────────
+window.printDash = function() {
+  // 모든 네트 펼치기
+  NETS.forEach(net => dashNetOpen[net] = true);
+  renderDashMembers();
+  setTimeout(() => window.print(), 300);
+};
+
+// ── 데이터 메뉴 ──────────────────────────────────────
+window.toggleDataMenu = function() {
+  const menu = document.getElementById('dataMenu');
+  menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+};
+// 메뉴 외부 클릭 시 닫기
+document.addEventListener('click', function(e) {
+  if(!e.target.closest('#dataMenuBtn') && !e.target.closest('#dataMenu')) {
+    const menu = document.getElementById('dataMenu');
+    if(menu) menu.style.display = 'none';
+  }
+});
+
+// ── 토스트 ────────────────────────────────────────────
+window.showToast = function(msg) {
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2800);
+};
+
+// ── 시작 ─────────────────────────────────────────────
+document.getElementById('newMemberNet').addEventListener('change', () => updateCellSelect(true));
+document.getElementById('manageNet').addEventListener('change', () => {
+  const mn = document.getElementById('manageNet');
+  const nn = document.getElementById('newMemberNet');
+  if(mn && nn) { nn.value = mn.value; updateCellSelect(false); }
+  renderManage();
+});
+
+// ── 대시보드 컨트롤 이벤트 직접 등록 ───────────────────
+document.addEventListener('DOMContentLoaded', function() {
+  // 검색창
+  const searchEl = document.getElementById('dashSearch');
+  const clearEl  = document.getElementById('dashSearchClear');
+  if(searchEl) {
+    searchEl.addEventListener('input', function() { renderDashMembers(); });
+    searchEl.addEventListener('keydown', function(e) {
+      if(e.key==='Enter') { e.preventDefault(); renderDashMembers(); }
+    });
+  }
+  if(clearEl) {
+    clearEl.addEventListener('click', function() {
+      document.getElementById('dashSearch').value = '';
+      document.getElementById('dashFilterNet').value = '';
+      renderDashMembers();
+    });
+  }
+
+  // 네트 필터 - 대시보드
+  const dnEl = document.getElementById('dashFilterNet');
+  if(dnEl) dnEl.addEventListener('change', function() { renderDashMembers(); });
+
+  // 주일출석 네트 필터
+  const snEl = document.getElementById('sundayFilterNet');
+  if(snEl) snEl.addEventListener('change', function() { renderSunday(); });
+
+  // 셀출석 네트 필터
+  const cnEl = document.getElementById('cellFilterNet');
+  if(cnEl) cnEl.addEventListener('change', function() { renderCellAtt(); });
+
+  // 기간 셀렉트 - 변경 즉시 전체 렌더링
+  function onPeriodChange() { renderDash(); renderDashMembers(); }
+
+  const yrEl = document.getElementById('dashYear');
+  const moEl = document.getElementById('dashMonth');
+  const qtEl = document.getElementById('dashQuarter');
+  const wkEl = document.getElementById('dashWeek');
+
+  if(yrEl) yrEl.addEventListener('change', function() { onPeriodChange(); });
+  if(moEl) moEl.addEventListener('change', function() { onPeriodChange(); });
+  if(qtEl) qtEl.addEventListener('change', function() { onPeriodChange(); renderTrendChart(); });
+  if(wkEl) wkEl.addEventListener('change', function() {
+    renderDash();
+    renderDashMembers();
+    renderTrendChart();
+  });
+  // 연도/월 셀렉트 변경시
+  const yrEl2 = document.getElementById('dashYear');
+  const moEl2 = document.getElementById('dashMonth');
+  if(yrEl2) yrEl2.addEventListener('change', function() { onPeriodChange(); renderTrendChart(); });
+  if(moEl2) moEl2.addEventListener('change', function() { onPeriodChange(); renderTrendChart(); });
+
+  // 구성원 추가 - 단계별 셀렉트 연동
+  const nmNet = document.getElementById('newMemberNet');
+  const nmG12 = document.getElementById('newMemberG12');
+  const nm144 = document.getElementById('newMember144');
+  const nm1728 = document.getElementById('newMember1728');
+
+  if(nmNet) nmNet.addEventListener('change', function() { updateNewMemberSelects(); });
+  if(nmG12) nmG12.addEventListener('change', function() {
+    const net = document.getElementById('newMemberNet').value;
+    const g12 = nmG12.value;
+    const s144 = document.getElementById('newMember144');
+    const s1728 = document.getElementById('newMember1728');
+    s144.innerHTML='<option value="">(선택 안 함 - G12 직속)</option>';
+    s1728.innerHTML='<option value="">(선택 안 함 - 144셀 직속)</option>';
+    if(net&&g12&&state.nets[net]?.g12[g12]) {
+      Object.keys(state.nets[net].g12[g12].c144||{}).forEach(c=>s144.innerHTML+=`<option value="${c}">${c}</option>`);
+    }
+  });
+  if(nm144) nm144.addEventListener('change', function() {
+    const net = document.getElementById('newMemberNet').value;
+    const g12 = document.getElementById('newMemberG12').value;
+    const c144 = nm144.value;
+    const s1728 = document.getElementById('newMember1728');
+    s1728.innerHTML='<option value="">(선택 안 함 - 144셀 직속)</option>';
+    if(net&&g12&&c144&&state.nets[net]?.g12[g12]?.c144[c144]) {
+      Object.keys(state.nets[net].g12[g12].c144[c144].c1728||{}).forEach(c=>s1728.innerHTML+=`<option value="${c}">${c}</option>`);
+    }
+  });
+
+  // manage 셀렉트 연동
+  const mg144Parent = document.getElementById('manage144Parent');
+  if(mg144Parent) mg144Parent.addEventListener('change', updateManage144Select);
+
+  // 주일출석/셀출석 접기/펼치기 이벤트 위임 (4단계)
+  document.addEventListener('click', function(e) {
+    // 주일출석 네트
+    const sNet = e.target.closest('[data-toggle-sunday]');
+    if(sNet){ sundayNetOpen[sNet.dataset.toggleSunday]=!sundayNetOpen[sNet.dataset.toggleSunday]; renderSunday(); return; }
+    // 주일출석 G12
+    const sG12 = e.target.closest('[data-toggle-sg12]');
+    if(sG12){ sundayG12Open[sG12.dataset.toggleSg12]=!sundayG12Open[sG12.dataset.toggleSg12]; renderSunday(); return; }
+    // 주일출석 144셀
+    const s144 = e.target.closest('[data-toggle-s144]');
+    if(s144){ sunday144Open[s144.dataset.toggleS144]=!sunday144Open[s144.dataset.toggleS144]; renderSunday(); return; }
+    // 셀출석 네트
+    const cNet = e.target.closest('[data-toggle-cell]');
+    if(cNet){ cellNetOpen[cNet.dataset.toggleCell]=!cellNetOpen[cNet.dataset.toggleCell]; renderCellAtt(); return; }
+    // 셀출석 G12
+    const cG12 = e.target.closest('[data-toggle-cg12]');
+    if(cG12){ cellG12Open[cG12.dataset.toggleCg12]=!cellG12Open[cG12.dataset.toggleCg12]; renderCellAtt(); return; }
+    // 셀출석 144셀
+    const c144 = e.target.closest('[data-toggle-c144]');
+    if(c144){ cell144Open[c144.dataset.toggleC144]=!cell144Open[c144.dataset.toggleC144]; renderCellAtt(); return; }
+  });
+});
+
+// ── Firebase 설정값 내장 ──────────────────────────────
+// Firestore 보안규칙 + 허용 이메일로 이중 보안되어 있어 안전합니다
+const BUILT_IN_CFG = {
+  apiKey: "AIzaSyB-vJOlz8PNgPEYhtwYxqIBtN-WKYkFCQQ",
+  projectId: "allnations-church",
+  appId: "1:760584908969:web:65b5c5d0ea54dea03c39b8",
+  authDomain: "allnations-church.firebaseapp.com",
+  storageBucket: "allnations-church.appspot.com",
+};
+
+// 내장 설정값으로 자동 시작 (DB 설정 입력 불필요)
+document.getElementById('configOverlay').classList.add('hidden');
+document.getElementById('loginOverlay').style.display = 'flex';
+document.getElementById('appContent').style.display = 'none';
+initFirebase(BUILT_IN_CFG);
+</script>
+</body>
+</html>
